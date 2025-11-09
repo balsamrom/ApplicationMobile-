@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import '../models/product.dart';
 import '../db/database_helper.dart';
-import 'admin_products_screen.dart';
 
 class AdminProductsScreen extends StatefulWidget {
   const AdminProductsScreen({super.key});
@@ -67,16 +66,13 @@ class _AdminProductsScreenState extends State<AdminProductsScreen> {
 
     if (confirm == true) {
       try {
-        final db = await DatabaseHelper.instance.database;
-        await db.delete('products', where: 'id = ?', whereArgs: [product.id]);
-
+        await DatabaseHelper.instance.deleteProduct(product.id!);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('✅ ${product.name} supprimé'),
             backgroundColor: Colors.green,
           ),
         );
-
         _loadProducts();
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -109,9 +105,7 @@ class _AdminProductsScreenState extends State<AdminProductsScreen> {
                   onPressed: () => setState(() => _searchQuery = ''),
                 )
                     : null,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(30),
-                ),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(30)),
                 filled: true,
                 fillColor: Colors.grey[100],
               ),
@@ -128,9 +122,9 @@ class _AdminProductsScreenState extends State<AdminProductsScreen> {
               children: [
                 _buildStat('Total', '${_products.length}', Icons.inventory),
                 _buildStat(
-                  'En stock',
-                  '${_products.where((p) => p.stock > 0).length}',
-                  Icons.check_circle,
+                  'Promos',
+                  '${_products.where((p) => p.isOnSale).length}',
+                  Icons.local_offer,
                 ),
                 _buildStat(
                   'Rupture',
@@ -172,22 +166,49 @@ class _AdminProductsScreenState extends State<AdminProductsScreen> {
                     margin: const EdgeInsets.only(bottom: 8),
                     child: ListTile(
                       contentPadding: const EdgeInsets.all(12),
-                      leading: ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: product.photoPath != null &&
-                            File(product.photoPath!).existsSync()
-                            ? Image.file(
-                          File(product.photoPath!),
-                          width: 60,
-                          height: 60,
-                          fit: BoxFit.cover,
-                        )
-                            : Container(
-                          width: 60,
-                          height: 60,
-                          color: Colors.grey[300],
-                          child: const Icon(Icons.image),
-                        ),
+                      leading: Stack(
+                        children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: product.photoPath != null &&
+                                File(product.photoPath!).existsSync()
+                                ? Image.file(
+                              File(product.photoPath!),
+                              width: 60,
+                              height: 60,
+                              fit: BoxFit.cover,
+                            )
+                                : Container(
+                              width: 60,
+                              height: 60,
+                              color: Colors.grey[300],
+                              child: const Icon(Icons.image),
+                            ),
+                          ),
+                          if (product.isOnSale)
+                            Positioned(
+                              top: 0,
+                              right: 0,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 4,
+                                  vertical: 2,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.red,
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Text(
+                                  '-${product.salePercentage}%',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ),
+                        ],
                       ),
                       title: Text(
                         product.name,
@@ -197,34 +218,34 @@ class _AdminProductsScreenState extends State<AdminProductsScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const SizedBox(height: 4),
-                          Text(
-                            '${product.price.toStringAsFixed(3)} DT • ${product.category}',
-                            style: const TextStyle(color: Colors.teal),
-                          ),
-                          const SizedBox(height: 4),
-                          Row(
-                            children: [
-                              Icon(
-                                product.stock > 0
-                                    ? Icons.check_circle
-                                    : Icons.cancel,
-                                size: 16,
-                                color: product.stock > 0
-                                    ? Colors.green
-                                    : Colors.red,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                'Stock: ${product.stock}',
-                                style: TextStyle(
-                                  color: product.stock > 0
-                                      ? Colors.green
-                                      : Colors.red,
-                                  fontWeight: FontWeight.w500,
+                          if (product.isOnSale)
+                            Row(
+                              children: [
+                                Text(
+                                  '${product.price.toStringAsFixed(3)} DT',
+                                  style: const TextStyle(
+                                    decoration: TextDecoration.lineThrough,
+                                    color: Colors.grey,
+                                    fontSize: 12,
+                                  ),
                                 ),
-                              ),
-                            ],
-                          ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  '${product.salePrice!.toStringAsFixed(3)} DT',
+                                  style: const TextStyle(
+                                    color: Colors.red,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            )
+                          else
+                            Text(
+                              '${product.price.toStringAsFixed(3)} DT',
+                              style: const TextStyle(color: Colors.teal),
+                            ),
+                          const SizedBox(height: 4),
+                          Text('${product.category} • Stock: ${product.stock}'),
                         ],
                       ),
                       trailing: Row(
@@ -301,7 +322,7 @@ class _AdminProductsScreenState extends State<AdminProductsScreen> {
 // ============================================
 
 class ProductFormScreen extends StatefulWidget {
-  final Product? product; // null = nouveau, sinon = modification
+  final Product? product;
 
   const ProductFormScreen({super.key, this.product});
 
@@ -315,11 +336,16 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
   final _descriptionController = TextEditingController();
   final _priceController = TextEditingController();
   final _stockController = TextEditingController();
+  final _salePriceController = TextEditingController();
 
   String _selectedCategory = 'Aliments';
   String? _selectedSpecies;
   File? _imageFile;
   bool _isSaving = false;
+
+  // ✅ NOUVEAUX CHAMPS PROMO
+  bool _isOnSale = false;
+  int? _salePercentage;
 
   final List<String> _categories = ['Aliments', 'Accessoires', 'Soins', 'Jouets'];
   final List<String> _species = ['Chien', 'Chat', 'Oiseau', 'Rongeur', 'Reptile', 'Poisson'];
@@ -334,6 +360,14 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
       _stockController.text = widget.product!.stock.toString();
       _selectedCategory = widget.product!.category;
       _selectedSpecies = widget.product!.species;
+
+      // ✅ Charger les données promo
+      _isOnSale = widget.product!.isOnSale;
+      _salePercentage = widget.product!.salePercentage;
+      if (widget.product!.salePrice != null) {
+        _salePriceController.text = widget.product!.salePrice.toString();
+      }
+
       if (widget.product!.photoPath != null) {
         _imageFile = File(widget.product!.photoPath!);
       }
@@ -346,7 +380,19 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
     _descriptionController.dispose();
     _priceController.dispose();
     _stockController.dispose();
+    _salePriceController.dispose();
     super.dispose();
+  }
+
+  // ✅ Calculer automatiquement le prix promo
+  void _calculateSalePrice() {
+    if (_priceController.text.isEmpty || _salePercentage == null) return;
+
+    final price = double.tryParse(_priceController.text);
+    if (price != null) {
+      final salePrice = price * (1 - _salePercentage! / 100);
+      _salePriceController.text = salePrice.toStringAsFixed(2);
+    }
   }
 
   Future<void> _pickImage() async {
@@ -372,13 +418,17 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
         stock: int.parse(_stockController.text),
         species: _selectedSpecies,
         photoPath: _imageFile?.path,
+
+        // ✅ Données promo
+        isOnSale: _isOnSale,
+        salePrice: _isOnSale && _salePriceController.text.isNotEmpty
+            ? double.parse(_salePriceController.text)
+            : null,
+        salePercentage: _isOnSale ? _salePercentage : null,
       );
 
-      final db = await DatabaseHelper.instance.database;
-
       if (widget.product == null) {
-        // Nouveau produit
-        await db.insert('products', product.toMap());
+        await DatabaseHelper.instance.insertProduct(product);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -388,13 +438,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
           );
         }
       } else {
-        // Modification
-        await db.update(
-          'products',
-          product.toMap(),
-          where: 'id = ?',
-          whereArgs: [product.id],
-        );
+        await DatabaseHelper.instance.updateProduct(product);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -502,6 +546,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                       prefixIcon: Icon(Icons.attach_money),
                     ),
                     keyboardType: TextInputType.number,
+                    onChanged: (_) => _calculateSalePrice(),
                     validator: (v) {
                       if (v == null || v.isEmpty) return 'Requis';
                       if (double.tryParse(v) == null) return 'Nombre invalide';
@@ -531,37 +576,136 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
 
             const SizedBox(height: 16),
 
-            // Catégorie
-            DropdownButtonFormField<String>(
-              value: _selectedCategory,
-              decoration: const InputDecoration(
-                labelText: 'Catégorie *',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.category),
-              ),
-              items: _categories.map((cat) {
-                return DropdownMenuItem(value: cat, child: Text(cat));
-              }).toList(),
-              onChanged: (value) => setState(() => _selectedCategory = value!),
+            // Catégorie et Espèce
+            Row(
+              children: [
+                Expanded(
+                  child: DropdownButtonFormField<String>(
+                    value: _selectedCategory,
+                    decoration: const InputDecoration(
+                      labelText: 'Catégorie *',
+                      border: OutlineInputBorder(),
+                      prefixIcon: Icon(Icons.category),
+                    ),
+                    items: _categories.map((cat) {
+                      return DropdownMenuItem(value: cat, child: Text(cat));
+                    }).toList(),
+                    onChanged: (value) => setState(() => _selectedCategory = value!),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: DropdownButtonFormField<String?>(
+                    value: _selectedSpecies,
+                    decoration: const InputDecoration(
+                      labelText: 'Espèce',
+                      border: OutlineInputBorder(),
+                      prefixIcon: Icon(Icons.pets),
+                    ),
+                    items: [
+                      const DropdownMenuItem(value: null, child: Text('Tous')),
+                      ..._species.map((sp) {
+                        return DropdownMenuItem(value: sp, child: Text(sp));
+                      }),
+                    ],
+                    onChanged: (value) => setState(() => _selectedSpecies = value),
+                  ),
+                ),
+              ],
             ),
 
-            const SizedBox(height: 16),
+            const SizedBox(height: 24),
 
-            // Espèce (optionnel)
-            DropdownButtonFormField<String?>(
-              value: _selectedSpecies,
-              decoration: const InputDecoration(
-                labelText: 'Espèce (optionnel)',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.pets),
+            // ============================================
+            // ✅ SECTION PROMOTION
+            // ============================================
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.red.shade50,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.red.shade200),
               ),
-              items: [
-                const DropdownMenuItem(value: null, child: Text('Tous les animaux')),
-                ..._species.map((sp) {
-                  return DropdownMenuItem(value: sp, child: Text(sp));
-                }),
-              ],
-              onChanged: (value) => setState(() => _selectedSpecies = value),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.local_offer, color: Colors.red),
+                      const SizedBox(width: 8),
+                      const Text(
+                        'Promotion',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const Spacer(),
+                      Switch(
+                        value: _isOnSale,
+                        onChanged: (value) {
+                          setState(() {
+                            _isOnSale = value;
+                            if (!value) {
+                              _salePercentage = null;
+                              _salePriceController.clear();
+                            }
+                          });
+                        },
+                        activeColor: Colors.red,
+                      ),
+                    ],
+                  ),
+
+                  if (_isOnSale) ...[
+                    const SizedBox(height: 16),
+                    const Text(
+                      'Pourcentage de réduction',
+                      style: TextStyle(fontWeight: FontWeight.w500),
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      children: [10, 15, 20, 25, 30, 40, 50].map((percent) {
+                        return ChoiceChip(
+                          label: Text('-$percent%'),
+                          selected: _salePercentage == percent,
+                          onSelected: (selected) {
+                            setState(() {
+                              _salePercentage = selected ? percent : null;
+                              _calculateSalePrice();
+                            });
+                          },
+                          selectedColor: Colors.red,
+                          labelStyle: TextStyle(
+                            color: _salePercentage == percent
+                                ? Colors.white
+                                : Colors.black,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _salePriceController,
+                      decoration: const InputDecoration(
+                        labelText: 'Prix promotionnel (DT)',
+                        border: OutlineInputBorder(),
+                        prefixIcon: Icon(Icons.price_change),
+                        helperText: 'Calculé automatiquement',
+                      ),
+                      keyboardType: TextInputType.number,
+                      readOnly: true,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.red,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
             ),
 
             const SizedBox(height: 32),

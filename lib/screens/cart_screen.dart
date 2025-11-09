@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'dart:io';
 import '../models/cart_item.dart';
-import '../models/order.dart';
 import '../db/database_helper.dart';
+import 'checkout_screen.dart';
 
 class CartScreen extends StatefulWidget {
   final int ownerId;
@@ -136,8 +136,7 @@ class _CartScreenState extends State<CartScreen> {
     }
   }
 
-  // ✅ Corrigée : ajoute product_name + transaction + cast stock robuste
-  Future<void> _placeOrder() async {
+  Future<void> _goToCheckout() async {
     if (_cartItems.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Votre panier est vide')),
@@ -145,10 +144,10 @@ class _CartScreenState extends State<CartScreen> {
       return;
     }
 
+    // Vérifier les stocks avant d'aller au checkout
     try {
       final db = await DatabaseHelper.instance.database;
 
-      // 1) Vérifier les stocks avant de commencer la transaction
       for (var item in _cartItems) {
         final productResult = await db.query(
           'products',
@@ -162,67 +161,46 @@ class _CartScreenState extends State<CartScreen> {
 
         final stock = (productResult.first['stock'] as num).toInt();
         if (stock < item.quantity) {
-          throw Exception(
-            'Stock insuffisant pour ${item.productName} (disponible: $stock)',
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Stock insuffisant pour ${item.productName}\nDisponible: $stock',
+              ),
+              backgroundColor: Colors.red,
+              duration: const Duration(seconds: 3),
+            ),
           );
+          return;
         }
       }
 
-      // 2) Tout faire en transaction
-      await db.transaction((txn) async {
-        // a) Créer la commande
-        final order = Order(
-          ownerId: widget.ownerId,
-          totalAmount: _totalAmount,
-          status: 'En cours',
-          orderDate: DateTime.now().toIso8601String(),
-        );
+      if (!mounted) return;
 
-        final orderId = await txn.insert('orders', order.toMap());
-
-        // b) Créer les items + décrémenter le stock
-        for (var item in _cartItems) {
-          await txn.insert('order_items', {
-            'order_id': orderId,
-            'product_id': item.productId,
-            'product_name': item.productName, // ✅ indispensable (NOT NULL)
-            'quantity': item.quantity,
-            'price': item.productPrice,
-          });
-
-          await txn.rawUpdate(
-            'UPDATE products SET stock = stock - ? WHERE id = ?',
-            [item.quantity, item.productId],
-          );
-        }
-
-        // c) Vider le panier
-        await txn.delete(
-          'cart_items',
-          where: 'owner_id = ?',
-          whereArgs: [widget.ownerId],
-        );
-      });
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('✅ Commande passée avec succès !'),
-            backgroundColor: Colors.green,
-            duration: Duration(seconds: 3),
+      // Naviguer vers l'écran de checkout
+      final result = await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => CheckoutScreen(
+            cartItems: _cartItems,
+            totalAmount: _totalAmount,
+            ownerId: widget.ownerId,
           ),
-        );
-        Navigator.pop(context, true); // pour rafraîchir le badge du Shop
+        ),
+      );
+
+      // Si la commande a été passée, recharger le panier
+      if (result == true && mounted) {
+        await _loadCartItems();
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Erreur: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Erreur: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 
@@ -347,13 +325,12 @@ class _CartScreenState extends State<CartScreen> {
                               Row(
                                 children: [
                                   IconButton(
-                                    onPressed: () =>
-                                        _updateQuantity(
-                                          item,
-                                          item.quantity - 1,
-                                        ),
-                                    icon: const Icon(Icons
-                                        .remove_circle_outline),
+                                    onPressed: () => _updateQuantity(
+                                      item,
+                                      item.quantity - 1,
+                                    ),
+                                    icon: const Icon(
+                                        Icons.remove_circle_outline),
                                     color: Colors.red,
                                     iconSize: 28,
                                   ),
@@ -378,11 +355,10 @@ class _CartScreenState extends State<CartScreen> {
                                     ),
                                   ),
                                   IconButton(
-                                    onPressed: () =>
-                                        _updateQuantity(
-                                          item,
-                                          item.quantity + 1,
-                                        ),
+                                    onPressed: () => _updateQuantity(
+                                      item,
+                                      item.quantity + 1,
+                                    ),
                                     icon: const Icon(
                                         Icons.add_circle_outline),
                                     color: Colors.green,
@@ -460,8 +436,8 @@ class _CartScreenState extends State<CartScreen> {
                     width: double.infinity,
                     height: 50,
                     child: ElevatedButton.icon(
-                      onPressed: _placeOrder,
-                      icon: const Icon(Icons.check_circle),
+                      onPressed: _goToCheckout,
+                      icon: const Icon(Icons.shopping_cart_checkout),
                       label: const Text(
                         'Passer la commande',
                         style: TextStyle(

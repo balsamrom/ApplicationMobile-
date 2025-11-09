@@ -5,7 +5,9 @@ import '../db/database_helper.dart';
 import '../widgets/product_card.dart';
 import 'product_detail_screen.dart';
 import 'cart_screen.dart';
-import 'admin_products_screen.dart'; // ← NOUVEAU IMPORT
+import 'admin_products_screen.dart';
+import 'favorites_screen.dart';
+import 'order_history_screen.dart';
 
 class ShopScreen extends StatefulWidget {
   final int ownerId;
@@ -20,6 +22,7 @@ class _ShopScreenState extends State<ShopScreen> {
   List<Product> _allProducts = [];
   List<Product> _filteredProducts = [];
   int _cartItemCount = 0;
+  int _favoritesCount = 0;
   bool _isLoading = true;
 
   final List<String> _categories = [
@@ -55,6 +58,7 @@ class _ShopScreenState extends State<ShopScreen> {
     await Future.wait([
       _loadProducts(),
       _loadCartCount(),
+      _loadFavoritesCount(),
     ]);
     setState(() => _isLoading = false);
   }
@@ -86,9 +90,22 @@ class _ShopScreenState extends State<ShopScreen> {
         where: 'owner_id = ?',
         whereArgs: [widget.ownerId],
       );
-      setState(() => _cartItemCount = result.length);
+      if (mounted) {
+        setState(() => _cartItemCount = result.length);
+      }
     } catch (e) {
       debugPrint('Erreur chargement panier: $e');
+    }
+  }
+
+  Future<void> _loadFavoritesCount() async {
+    try {
+      final count = await DatabaseHelper.instance.getFavoritesCount(widget.ownerId);
+      if (mounted) {
+        setState(() => _favoritesCount = count);
+      }
+    } catch (e) {
+      debugPrint('Erreur chargement favoris: $e');
     }
   }
 
@@ -146,7 +163,7 @@ class _ShopScreenState extends State<ShopScreen> {
           'product_id': product.id,
           'quantity': 1,
           'product_name': product.name,
-          'product_price': product.price,
+          'product_price': product.finalPrice,
           'product_photo': product.photoPath,
         });
       }
@@ -180,10 +197,72 @@ class _ShopScreenState extends State<ShopScreen> {
         backgroundColor: Colors.teal,
         foregroundColor: Colors.white,
         actions: [
-          // ★★★ NOUVEAU BOUTON ADMIN ★★★
+          // ❤️ BOUTON FAVORIS avec badge
+          Stack(
+            alignment: Alignment.center,
+            children: [
+              IconButton(
+                icon: const Icon(Icons.favorite),
+                iconSize: 28,
+                tooltip: 'Mes Favoris',
+                onPressed: () async {
+                  await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => FavoritesScreen(ownerId: widget.ownerId),
+                    ),
+                  );
+                  _loadFavoritesCount();
+                },
+              ),
+              if (_favoritesCount > 0)
+                Positioned(
+                  right: 6,
+                  top: 6,
+                  child: Container(
+                    padding: const EdgeInsets.all(5),
+                    decoration: const BoxDecoration(
+                      color: Colors.red,
+                      shape: BoxShape.circle,
+                    ),
+                    constraints: const BoxConstraints(
+                      minWidth: 20,
+                      minHeight: 20,
+                    ),
+                    child: Text(
+                      '$_favoritesCount',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+
+          // 📦 BOUTON HISTORIQUE COMMANDES
+          IconButton(
+            icon: const Icon(Icons.receipt_long),
+            iconSize: 28,
+            tooltip: 'Mes Commandes',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => OrderHistoryScreen(ownerId: widget.ownerId),
+                ),
+              );
+            },
+          ),
+
+          // 🛠️ BOUTON ADMIN
           IconButton(
             icon: const Icon(Icons.admin_panel_settings),
-            tooltip: '🛠️ Gestion Produits (Admin)',
+            iconSize: 28,
+            tooltip: 'Gestion Produits (Admin)',
             onPressed: () async {
               await Navigator.push(
                 context,
@@ -191,12 +270,11 @@ class _ShopScreenState extends State<ShopScreen> {
                   builder: (context) => const AdminProductsScreen(),
                 ),
               );
-              // Recharger les produits après modification
               _loadData();
             },
           ),
 
-          // Bouton Panier avec badge
+          // 🛒 BOUTON PANIER avec badge
           Stack(
             alignment: Alignment.center,
             children: [
@@ -283,9 +361,8 @@ class _ShopScreenState extends State<ShopScreen> {
           ),
 
           // 🏷️ Filtres Catégories
-          Container(
+          SizedBox(
             height: 50,
-            margin: const EdgeInsets.only(bottom: 8),
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -313,10 +390,11 @@ class _ShopScreenState extends State<ShopScreen> {
             ),
           ),
 
+          const SizedBox(height: 8),
+
           // 🐾 Filtres Espèces
-          Container(
+          SizedBox(
             height: 50,
-            margin: const EdgeInsets.only(bottom: 8),
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -345,11 +423,11 @@ class _ShopScreenState extends State<ShopScreen> {
             ),
           ),
 
-          const Divider(height: 1),
+          const Divider(height: 16),
 
           // 📊 Nombre de résultats
           Padding(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.symmetric(horizontal: 12),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -378,6 +456,8 @@ class _ShopScreenState extends State<ShopScreen> {
               ],
             ),
           ),
+
+          const SizedBox(height: 8),
 
           // 🛍️ Grille de produits
           Expanded(
@@ -418,10 +498,9 @@ class _ShopScreenState extends State<ShopScreen> {
               onRefresh: _loadData,
               child: GridView.builder(
                 padding: const EdgeInsets.all(12),
-                gridDelegate:
-                const SliverGridDelegateWithFixedCrossAxisCount(
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 2,
-                  childAspectRatio: 0.68,
+                  childAspectRatio: 0.75, // ← FIX OVERFLOW
                   crossAxisSpacing: 12,
                   mainAxisSpacing: 12,
                 ),
@@ -430,6 +509,7 @@ class _ShopScreenState extends State<ShopScreen> {
                   final product = _filteredProducts[index];
                   return ProductCard(
                     product: product,
+                    ownerId: widget.ownerId,
                     onTap: () async {
                       await Navigator.push(
                         context,
@@ -441,6 +521,7 @@ class _ShopScreenState extends State<ShopScreen> {
                         ),
                       );
                       _loadCartCount();
+                      _loadFavoritesCount();
                     },
                     onAddToCart: () => _addToCart(product),
                   );
