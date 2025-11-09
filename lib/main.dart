@@ -1,19 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:sqflite/sqflite.dart';
-import 'package:path/path.dart';
 import 'screens/login_screen.dart';
 import 'db/database_helper.dart';
 
 void main() async {
+  // On s'assure que les widgets sont initialisés avant toute chose.
   WidgetsFlutterBinding.ensureInitialized();
-
-  // --- Supprimer l'ancienne DB pour éviter les conflits pendant le développement ---
-  final dbPath = join(await getDatabasesPath(), 'pet.db');
-  await deleteDatabase(dbPath);
-
-  // --- Initialiser la DB avant de lancer l'application ---
+  
+  // CORRIGÉ : On initialise simplement la base de données, sans jamais la supprimer.
   await DatabaseHelper.instance.database;
-
+  
   runApp(const MyApp());
 }
 

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import '../models/owner.dart';
-import 'pet_list_screen.dart';
-import 'document_screen.dart';
-import 'settings_screen.dart';
+import './pet_list_screen.dart';
+import './document_screen.dart';
+import './settings_screen.dart';
+import './veterinary/simple_vet_screen.dart';
+import './veterinary/book_search_screen.dart'; // MODIFIÉ: Ajout de l'import pour la bibliothèque
 
 class OwnerProfileScreen extends StatelessWidget {
   final Owner owner;
@@ -120,7 +122,7 @@ class OwnerProfileScreen extends StatelessWidget {
               'Gérer vos compagnons',
               Icons.pets,
               Colors.teal,
-                  () => Navigator.push(
+              () => Navigator.push(
                 context,
                 MaterialPageRoute(builder: (_) => PetListScreen(owner: owner)),
               ),
@@ -131,19 +133,24 @@ class OwnerProfileScreen extends StatelessWidget {
               'Trouver un spécialiste',
               Icons.medical_services,
               Colors.deepPurple,
-                  () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: const Row(
-                      children: [
-                        Text('🐾 Fonctionnalité à venir'),
-                      ],
-                    ),
-                    behavior: SnackBarBehavior.floating,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
+              () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => SimpleVetScreen(owner: owner)),
+                );
+              },
+            ),
+
+            // MODIFIÉ: Ajout de la carte Bibliothèque pour gestion veterinaire
+            _buildProfileCard(
+              'Bibliothèque',
+              'Rechercher des ouvrages',
+              Icons.book_outlined,
+              Colors.blue,
+              () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const BookSearchScreen()),
                 );
               },
             ),
@@ -153,34 +160,12 @@ class OwnerProfileScreen extends StatelessWidget {
               'Conseils alimentaires',
               Icons.restaurant,
               Colors.orange,
-                  () {
+              () {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: const Row(
                       children: [
                         Text('🥕 Conseils nutrition à venir'),
-                      ],
-                    ),
-                    behavior: SnackBarBehavior.floating,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                );
-              },
-            ),
-
-            _buildProfileCard(
-              'Activité physique',
-              'Suivi et statistiques',
-              Icons.fitness_center,
-              Colors.green,
-                  () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: const Row(
-                      children: [
-                        Text('💪 Suivi activité en développement'),
                       ],
                     ),
                     behavior: SnackBarBehavior.floating,

@@ -1,11 +1,11 @@
-import 'package:pet_owner_app/screens/vet_dashboard_screen.dart';
-
-import '../db/database_helper.dart';
-import '../models/owner.dart';
-import 'register_screen.dart';
-import 'owner_profile_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import '../db/database_helper.dart';
+import '../models/owner.dart';
+import './vet_dashboard_screen.dart';
+import './owner_profile_screen.dart';
+import './register_screen.dart';
+import './admin/admin_dashboard_screen.dart'; // On importe l'écran de l'admin
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -24,27 +24,30 @@ class _LoginScreenState extends State<LoginScreen> {
     if (username.isEmpty || password.isEmpty) return;
 
     final owner = await DatabaseHelper.instance.getOwnerByUsernameAndPassword(username, password);
-    if (owner != null) {
-      if (owner.isVet == 1) {
-        // ✅ Redirection vers écran vétérinaire
+    if (mounted && owner != null) {
+      // CORRIGÉ : Logique de redirection complète et dans le bon ordre
+      if (username == 'admin') {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (_) => VetDashboardScreen(owner: owner)), // Crée cet écran
+          MaterialPageRoute(builder: (_) => AdminDashboardScreen()),
+        );
+      } else if (owner.isVet) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => VetDashboardScreen(vetId: owner.id!)),
         );
       } else {
-        // ✅ Redirection vers écran propriétaire
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (_) => OwnerProfileScreen(owner: owner)),
         );
       }
-    } else {
+    } else if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Utilisateur introuvable')),
       );
     }
   }
-
 
   void _loginWithGoogle() {
     ScaffoldMessenger.of(context)
@@ -65,15 +68,14 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        // 🌈 Dégradé inspiré du logo PetCare
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              Color(0xFFE1B1B1), // rose pêche
-              Color(0xFFE4DCA8), // jaune doux
-              Color(0xFFB8F3D4), // vert menthe clair
-              Color(0xFFAEDFF7), // bleu ciel
-              Color(0xFFD8C4F7), // lavande
+              Color(0xFFE1B1B1),
+              Color(0xFFE4DCA8),
+              Color(0xFFB8F3D4),
+              Color(0xFFAEDFF7),
+              Color(0xFFD8C4F7),
             ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
@@ -86,15 +88,11 @@ class _LoginScreenState extends State<LoginScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // 🐾 Logo
               Image.asset(
-
                 'assets/logo2.png',
                 height: 200,
               ),
               const SizedBox(height: 50),
-
-              // 🧍 Nom d'utilisateur
               TextField(
                 controller: _username,
                 decoration: InputDecoration(
@@ -108,8 +106,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-
-              // 🔒 Mot de passe
               TextField(
                 controller: _password,
                 obscureText: true,
@@ -123,7 +119,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
               ),
-
               Align(
                 alignment: Alignment.centerRight,
                 child: TextButton(
@@ -135,8 +130,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
               const SizedBox(height: 20),
-
-              // 🔘 Bouton connexion
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
@@ -154,16 +147,12 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
               ),
-
               const SizedBox(height: 20),
-
-              // 🌐 Connexion sociale
               const Text(
                 'Ou se connecter avec',
                 style: TextStyle(color: Colors.white),
               ),
               const SizedBox(height: 16),
-
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -180,10 +169,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ],
               ),
-
               const SizedBox(height: 30),
-
-              // 🆕 Créer un compte
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -195,7 +181,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     onPressed: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (_) => const RegisterScreen()),
+                        MaterialPageRoute(builder: (_) => RegisterScreen()),
                       );
                     },
                     child: const Text(
