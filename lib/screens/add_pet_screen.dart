@@ -1,20 +1,22 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import '../models/pet.dart';
-import '../db/database_helper.dart';
+import 'package:pet_owner_app/models/owner.dart';
+import 'package:pet_owner_app/models/pet.dart';
+import 'package:pet_owner_app/db/database_helper.dart';
 
-class AddEditPetScreen extends StatefulWidget {
-  final int ownerId;
+class AddPetScreen extends StatefulWidget {
+  final Owner owner;
   final Pet? pet;
 
-  const AddEditPetScreen({super.key, required this.ownerId, this.pet});
+  const AddPetScreen({super.key, required this.owner, this.pet});
 
   @override
-  State<AddEditPetScreen> createState() => _AddEditPetScreenState();
+  State<AddPetScreen> createState() => _AddPetScreenState();
 }
 
-class _AddEditPetScreenState extends State<AddEditPetScreen> {
+class _AddPetScreenState extends State<AddPetScreen> {
+  final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _ageController = TextEditingController();
   final _weightController = TextEditingController();
@@ -62,7 +64,6 @@ class _AddEditPetScreenState extends State<AddEditPetScreen> {
       _ageController.text = widget.pet!.age?.toString() ?? '';
       _weightController.text = widget.pet!.weight?.toString() ?? '';
       _photoPath = widget.pet!.photo;
-
       _selectedSpecies = widget.pet!.species;
       _selectedBreed = widget.pet!.breed;
       _selectedGender = widget.pet!.gender;
@@ -70,108 +71,149 @@ class _AddEditPetScreenState extends State<AddEditPetScreen> {
   }
 
   Future<void> _pickPhoto() async {
-    final XFile? picked = await picker.pickImage(source: ImageSource.gallery);
-    if (picked != null) setState(() => _photoPath = picked.path);
+    final XFile? picked = await picker.pickImage(source: ImageSource.gallery, imageQuality: 80);
+    if (picked != null) {
+      setState(() => _photoPath = picked.path);
+    }
   }
 
   Future<void> _savePet() async {
-    final name = _nameController.text.trim();
-    if (name.isEmpty || _selectedSpecies == null || _selectedGender == null) return;
+    if (_formKey.currentState!.validate()) {
+      final pet = Pet(
+        id: widget.pet?.id,
+        ownerId: widget.owner.id!,
+        name: _nameController.text.trim(),
+        species: _selectedSpecies!,
+        breed: _selectedBreed,
+        gender: _selectedGender!,
+        age: _ageController.text.isEmpty ? null : int.tryParse(_ageController.text.trim()),
+        weight: _weightController.text.isEmpty ? null : double.tryParse(_weightController.text.trim()),
+        photo: _photoPath,
+      );
 
-    final pet = Pet(
-      id: widget.pet?.id,
-      ownerId: widget.ownerId,
-      name: name,
-      species: _selectedSpecies!,
-      breed: _selectedBreed,
-      gender: _selectedGender!,
-      age: _ageController.text.isEmpty ? null : int.tryParse(_ageController.text.trim()),
-      weight: _weightController.text.isEmpty ? null : double.tryParse(_weightController.text.trim()),
-      photo: _photoPath,
-    );
+      if (widget.pet == null) {
+        await DatabaseHelper.instance.insertPet(pet);
+      } else {
+        await DatabaseHelper.instance.updatePet(pet);
+      }
 
-    if (widget.pet == null) {
-      await DatabaseHelper.instance.insertPet(pet);
-    } else {
-      await DatabaseHelper.instance.updatePet(pet);
+      Navigator.pop(context, true); // Retourner true pour indiquer le succès
     }
-
-    Navigator.pop(context);
   }
 
   @override
   Widget build(BuildContext context) {
     final breeds = _selectedSpecies != null ? _breedMap[_selectedSpecies!] ?? [] : [];
-
     return Scaffold(
-      appBar: AppBar(title: Text(widget.pet == null ? 'Ajouter animal' : 'Modifier animal')),
-      body: ListView(
-        padding: const EdgeInsets.all(16.0),
+      appBar: AppBar(
+        title: Text(widget.pet == null ? 'Ajouter un animal' : 'Modifier l\'animal'),
+      ),
+      body: Form(
+        key: _formKey,
+        child: ListView(
+          padding: const EdgeInsets.all(16.0),
+          children: [
+            _buildPhotoPicker(),
+            const SizedBox(height: 24),
+            TextFormField(
+              controller: _nameController,
+              decoration: const InputDecoration(labelText: 'Nom'),
+              validator: (value) => value!.isEmpty ? 'Le nom est requis' : null,
+            ),
+            const SizedBox(height: 16),
+            DropdownButtonFormField<String>(
+              value: _selectedSpecies,
+              decoration: const InputDecoration(labelText: 'Espèce'),
+              items: _speciesList
+                  .map<DropdownMenuItem<String>>(
+                      (e) => DropdownMenuItem<String>(value: e, child: Text(e)))
+                  .toList(),
+              onChanged: (val) {
+                setState(() {
+                  _selectedSpecies = val;
+                  _selectedBreed = null;
+                });
+              },
+              validator: (value) => value == null ? 'L\'espèce est requise' : null,
+            ),
+            const SizedBox(height: 16),
+            if (breeds.isNotEmpty)
+              DropdownButtonFormField<String>(
+                value: _selectedBreed,
+                decoration: const InputDecoration(labelText: 'Race'),
+                items: breeds
+                    .map<DropdownMenuItem<String>>(
+                        (e) => DropdownMenuItem<String>(value: e, child: Text(e)))
+                    .toList(),
+                onChanged: (val) => setState(() => _selectedBreed = val),
+              ),
+            const SizedBox(height: 16),
+            DropdownButtonFormField<String>(
+              value: _selectedGender,
+              decoration: const InputDecoration(labelText: 'Genre'),
+              items: _genderList
+                  .map<DropdownMenuItem<String>>(
+                      (e) => DropdownMenuItem<String>(value: e, child: Text(e)))
+                  .toList(),
+              onChanged: (val) => setState(() => _selectedGender = val),
+              validator: (value) => value == null ? 'Le genre est requis' : null,
+            ),
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: _ageController,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(labelText: 'Âge'),
+            ),
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: _weightController,
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              decoration: const InputDecoration(labelText: 'Poids (kg)'),
+            ),
+            const SizedBox(height: 32),
+            ElevatedButton(
+              onPressed: _savePet,
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              child: Text(widget.pet == null ? 'Enregistrer' : 'Mettre à jour'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPhotoPicker() {
+    return Center(
+      child: Stack(
         children: [
-          Center(
-            child: _photoPath == null
-                ? const CircleAvatar(radius: 50, child: Icon(Icons.pets, size: 50))
-                : CircleAvatar(radius: 50, backgroundImage: FileImage(File(_photoPath!))),
+          CircleAvatar(
+            radius: 60,
+            backgroundImage: _photoPath != null && File(_photoPath!).existsSync()
+                ? FileImage(File(_photoPath!))
+                : null,
+            child: _photoPath == null || !File(_photoPath!).existsSync()
+                ? const Icon(Icons.pets, size: 60)
+                : null,
           ),
-          TextButton.icon(
-            onPressed: _pickPhoto,
-            icon: const Icon(Icons.photo),
-            label: const Text('Sélectionner photo'),
+          Positioned(
+            bottom: 0,
+            right: 0,
+            child: Material(
+              color: Theme.of(context).primaryColor,
+              shape: const CircleBorder(),
+              child: InkWell(
+                onTap: _pickPhoto,
+                customBorder: const CircleBorder(),
+                child: const Padding(
+                  padding: EdgeInsets.all(8.0),
+                  child: Icon(Icons.camera_alt, color: Colors.white, size: 20),
+                ),
+              ),
+            ),
           ),
-          const SizedBox(height: 10),
-          TextField(controller: _nameController, decoration: const InputDecoration(labelText: 'Nom')),
-          const SizedBox(height: 10),
-          DropdownButtonFormField<String>(
-            value: _selectedSpecies,
-            decoration: const InputDecoration(labelText: 'Espèce'),
-            isDense: true,
-            items: _speciesList.map<DropdownMenuItem<String>>((e) => DropdownMenuItem<String>(
-              value: e,
-              child: Text(e, style: const TextStyle(fontSize: 14)),
-            )).toList(),
-            onChanged: (val) {
-              setState(() {
-                _selectedSpecies = val;
-                _selectedBreed = null;
-              });
-            },
-          ),
-          const SizedBox(height: 10),
-          DropdownButtonFormField<String>(
-            value: _selectedBreed,
-            decoration: const InputDecoration(labelText: 'Race'),
-            isDense: true,
-            items: breeds.map<DropdownMenuItem<String>>((e) => DropdownMenuItem<String>(
-              value: e,
-              child: Text(e, style: const TextStyle(fontSize: 14)),
-            )).toList(),
-            onChanged: (val) => setState(() => _selectedBreed = val),
-          ),
-          const SizedBox(height: 10),
-          DropdownButtonFormField<String>(
-            value: _selectedGender,
-            decoration: const InputDecoration(labelText: 'Genre'),
-            isDense: true,
-            items: _genderList.map<DropdownMenuItem<String>>((e) => DropdownMenuItem<String>(
-              value: e,
-              child: Text(e, style: const TextStyle(fontSize: 14)),
-            )).toList(),
-            onChanged: (val) => setState(() => _selectedGender = val),
-          ),
-          const SizedBox(height: 10),
-          TextField(
-            controller: _ageController,
-            keyboardType: TextInputType.number,
-            decoration: const InputDecoration(labelText: 'Âge'),
-          ),
-          const SizedBox(height: 10),
-          TextField(
-            controller: _weightController,
-            keyboardType: TextInputType.number,
-            decoration: const InputDecoration(labelText: 'Poids (kg)'),
-          ),
-          const SizedBox(height: 20),
-          ElevatedButton(onPressed: _savePet, child: const Text('Enregistrer')),
         ],
       ),
     );

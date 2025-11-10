@@ -8,6 +8,7 @@ class Pet {
   int? age;
   double? weight;
   String? photo;
+  List<String>? analysis;
 
   Pet({
     this.id,
@@ -19,6 +20,7 @@ class Pet {
     this.age,
     this.weight,
     this.photo,
+    this.analysis,
   });
 
   Map<String, dynamic> toMap() => {
@@ -44,4 +46,30 @@ class Pet {
     weight: m['weight'] == null ? null : (m['weight'] as num).toDouble(),
     photo: m['photo'] as String?,
   );
+
+  Pet copyWith({
+    int? id,
+    int? ownerId,
+    String? name,
+    String? species,
+    String? breed,
+    String? gender,
+    int? age,
+    double? weight,
+    String? photo,
+    List<String>? analysis,
+  }) {
+    return Pet(
+      id: id ?? this.id,
+      ownerId: ownerId ?? this.ownerId,
+      name: name ?? this.name,
+      species: species ?? this.species,
+      breed: breed ?? this.breed,
+      gender: gender ?? this.gender,
+      age: age ?? this.age,
+      weight: weight ?? this.weight,
+      photo: photo ?? this.photo,
+      analysis: analysis ?? this.analysis,
+    );
+  }
 }

@@ -1,21 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:sqflite/sqflite.dart';
-import 'package:path/path.dart';
-import 'screens/login_screen.dart';
-import 'db/database_helper.dart';
+import 'package:flutter_gemini/flutter_gemini.dart';
+import 'package:pet_owner_app/consts.dart';
+import 'package:pet_owner_app/screens/login_screen.dart';
 
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+import 'package:flutter_gemini/flutter_gemini.dart';
 
-  // --- Supprimer l'ancienne DB pour éviter les conflits pendant le développement ---
-  final dbPath = join(await getDatabasesPath(), 'pet.db');
-  await deleteDatabase(dbPath);
-
-  // --- Initialiser la DB avant de lancer l'application ---
-  await DatabaseHelper.instance.database;
-
+void main() {
+  Gemini.init(apiKey: GEMINI_API_KEY); // pas de 'model' en 3.x
   runApp(const MyApp());
 }
+
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -23,9 +17,10 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'Pet Owner Manager',
-      theme: ThemeData(primarySwatch: Colors.teal),
+      title: 'Pet Owner App',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+      ),
       home: const LoginScreen(),
     );
   }
