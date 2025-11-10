@@ -8,11 +8,11 @@ import 'db/database_helper.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-
+  // Supprime DB pour reset (ENLEVER EN PRODUCTION)
   final dbPath = join(await getDatabasesPath(), 'pet.db');
   await deleteDatabase(dbPath);
 
-  // --- Initialiser la DB avant de lancer l'application ---
+  // Initialiser la DB
   await DatabaseHelper.instance.database;
 
   runApp(const MyApp());
@@ -27,10 +27,9 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Pet Owner Manager',
       theme: ThemeData(primarySwatch: Colors.teal),
-      // 🎯 Direct lel ShopScreen pour tester
+      // 🎯 Direct au Shop (test)
       home: const ShopScreen(ownerId: 1),
-      // Pour retourner au login normal, décommente la ligne ci-dessous:
-      // home: const LoginScreen(),
+      // Pour production: home: const LoginScreen(),
     );
   }
 }

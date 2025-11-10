@@ -8,6 +8,7 @@ import 'cart_screen.dart';
 import 'admin_products_screen.dart';
 import 'favorites_screen.dart';
 import 'order_history_screen.dart';
+import 'browse_breeds_screen.dart';
 
 class ShopScreen extends StatefulWidget {
   final int ownerId;
@@ -197,6 +198,21 @@ class _ShopScreenState extends State<ShopScreen> {
         backgroundColor: Colors.teal,
         foregroundColor: Colors.white,
         actions: [
+          // 🐾 BOUTON: Encyclopédie des Races
+          IconButton(
+            icon: const Icon(Icons.pets),
+            iconSize: 28,
+            tooltip: 'Encyclopédie des Races',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => BrowseBreedsScreen(ownerId: widget.ownerId), // ✅ CORRIGÉ
+                ),
+              );
+            },
+          ),
+
           // ❤️ BOUTON FAVORIS avec badge
           Stack(
             alignment: Alignment.center,
@@ -327,9 +343,85 @@ class _ShopScreenState extends State<ShopScreen> {
           ? const Center(child: CircularProgressIndicator())
           : Column(
         children: [
+          // 🎨 CARD: Encyclopédie des Races
+          Card(
+            margin: const EdgeInsets.all(12),
+            elevation: 4,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: InkWell(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => BrowseBreedsScreen(ownerId: widget.ownerId), // ✅ CORRIGÉ
+                  ),
+                );
+              },
+              borderRadius: BorderRadius.circular(16),
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.orange.shade400, Colors.deepOrange.shade300],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.3),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(
+                        Icons.pets,
+                        size: 40,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    const Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '🐕 Encyclopédie des Races 🐱',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                          SizedBox(height: 4),
+                          Text(
+                            'Découvrez toutes les races et trouvez les meilleurs produits',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Colors.white70,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Icon(
+                      Icons.arrow_forward_ios,
+                      color: Colors.white,
+                      size: 24,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+
           // 🔍 Barre de recherche
           Padding(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.symmetric(horizontal: 12),
             child: TextField(
               decoration: InputDecoration(
                 hintText: '🔍 Rechercher un produit...',
@@ -359,6 +451,8 @@ class _ShopScreenState extends State<ShopScreen> {
               },
             ),
           ),
+
+          const SizedBox(height: 12),
 
           // 🏷️ Filtres Catégories
           SizedBox(
@@ -500,7 +594,7 @@ class _ShopScreenState extends State<ShopScreen> {
                 padding: const EdgeInsets.all(12),
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 2,
-                  childAspectRatio: 0.75, // ← FIX OVERFLOW
+                  childAspectRatio: 0.75,
                   crossAxisSpacing: 12,
                   mainAxisSpacing: 12,
                 ),
