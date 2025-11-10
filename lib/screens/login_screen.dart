@@ -55,7 +55,7 @@ class _LoginScreenState extends State<LoginScreen> {
           if (owner.isVetApproved == 1) {
             Navigator.pushReplacement(
               context,
-              MaterialPageRoute(builder: (_) => VetDashboardScreen(owner: owner)),
+              MaterialPageRoute(builder: (_) => VetDashboardScreen(vetId: owner.id!)),
             );
           } else {
             ScaffoldMessenger.of(context).showSnackBar(

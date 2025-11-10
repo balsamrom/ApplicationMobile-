@@ -295,6 +295,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
     );
   }
 
+
   Future<void> _deleteActivityLog(int id) async {
     await DatabaseHelper.instance.deleteActivityLog(id);
     _loadActivityLogs();
