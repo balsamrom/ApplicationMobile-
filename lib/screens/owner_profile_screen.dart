@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:pet_owner_app/screens/first_aid_screen.dart';
+import 'package:pet_owner_app/screens/vet_alert_list_screen.dart';
 import '../models/owner.dart';
 import 'pet_list_screen.dart';
 import 'document_screen.dart';
@@ -81,7 +83,7 @@ class OwnerProfileScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        title: const Text('Espace propriétaire'),
+        title: Text(owner.isVet ? 'Tableau de Bord Vétérinaire' : 'Espace propriétaire'),
         backgroundColor: Colors.teal,
         actions: [
           IconButton(
@@ -102,8 +104,7 @@ class OwnerProfileScreen extends StatelessWidget {
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: ListView( // Changed to ListView to avoid potential overflow
           children: [
             const Text(
               'Services',
@@ -126,11 +127,35 @@ class OwnerProfileScreen extends StatelessWidget {
               ),
             ),
 
+            if (owner.isVet)
+              _buildProfileCard(
+                'Alertes d\'urgence',
+                'Consulter les urgences en cours',
+                Icons.warning_amber_rounded,
+                Colors.orange,
+                    () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const VetAlertListScreen()),
+                ),
+              ),
+
+            if (!owner.isVet)
+              _buildProfileCard(
+                'Trousse de premiers secours',
+                'Urgences et premiers soins',
+                Icons.healing,
+                Colors.red,
+                    () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => FirstAidScreen(owner: owner)),
+                ),
+              ),
+
             _buildProfileCard(
               'Vétérinaires',
               'Trouver un spécialiste',
               Icons.medical_services,
-              Colors.deepPurple,
+              Colors.blue,
                   () {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(

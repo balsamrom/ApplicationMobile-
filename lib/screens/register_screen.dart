@@ -5,7 +5,6 @@ import '../db/database_helper.dart';
 import '../models/owner.dart';
 import 'login_screen.dart';
 import 'owner_profile_screen.dart';
-import 'vet_dashboard_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});

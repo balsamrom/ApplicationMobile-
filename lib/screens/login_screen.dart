@@ -1,11 +1,9 @@
-import 'package:pet_owner_app/screens/vet_dashboard_screen.dart';
-
+import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../db/database_helper.dart';
 import '../models/owner.dart';
 import 'register_screen.dart';
 import 'owner_profile_screen.dart';
-import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -18,6 +16,13 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _username = TextEditingController();
   final TextEditingController _password = TextEditingController();
 
+  @override
+  void dispose() {
+    _username.dispose();
+    _password.dispose();
+    super.dispose();
+  }
+
   Future<void> _login() async {
     final username = _username.text.trim();
     final password = _password.text.trim();
@@ -25,26 +30,20 @@ class _LoginScreenState extends State<LoginScreen> {
 
     final owner = await DatabaseHelper.instance.getOwnerByUsernameAndPassword(username, password);
     if (owner != null) {
-      if (owner.isVet == 1) {
-        // ✅ Redirection vers écran vétérinaire
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => VetDashboardScreen(owner: owner)), // Crée cet écran
-        );
-      } else {
-        // ✅ Redirection vers écran propriétaire
+      if (mounted) {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (_) => OwnerProfileScreen(owner: owner)),
         );
       }
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Utilisateur introuvable')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Utilisateur introuvable')),
+        );
+      }
     }
   }
-
 
   void _loginWithGoogle() {
     ScaffoldMessenger.of(context)
@@ -65,36 +64,33 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        // 🌈 Dégradé inspiré du logo PetCare
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              Color(0xFFE1B1B1), // rose pêche
-              Color(0xFFE4DCA8), // jaune doux
-              Color(0xFFB8F3D4), // vert menthe clair
-              Color(0xFFAEDFF7), // bleu ciel
-              Color(0xFFD8C4F7), // lavande
+              Color(0xFFE1B1B1),
+              Color(0xFFE4DCA8),
+              Color(0xFFB8F3D4),
+              Color(0xFFAEDFF7),
+              Color(0xFFD8C4F7),
             ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
         ),
         width: double.infinity,
-        height: double.infinity,
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 60),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // 🐾 Logo
+              // Logo
               Image.asset(
-
                 'assets/logo2.png',
                 height: 200,
               ),
               const SizedBox(height: 50),
 
-              // 🧍 Nom d'utilisateur
+              // Nom d'utilisateur
               TextField(
                 controller: _username,
                 decoration: InputDecoration(
@@ -109,7 +105,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 16),
 
-              // 🔒 Mot de passe
+              // Mot de passe
               TextField(
                 controller: _password,
                 obscureText: true,
@@ -136,7 +132,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 20),
 
-              // 🔘 Bouton connexion
+              // Bouton connexion
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
@@ -157,7 +153,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
               const SizedBox(height: 20),
 
-              // 🌐 Connexion sociale
+              // Connexion sociale
               const Text(
                 'Ou se connecter avec',
                 style: TextStyle(color: Colors.white),
@@ -183,7 +179,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
               const SizedBox(height: 30),
 
-              // 🆕 Créer un compte
+              // Créer un compte
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
