@@ -3,6 +3,7 @@ import '../models/owner.dart';
 import 'pet_list_screen.dart';
 import 'document_screen.dart';
 import 'settings_screen.dart';
+import 'shop_screen.dart';
 
 class OwnerProfileScreen extends StatelessWidget {
   final Owner owner;
@@ -100,99 +101,115 @@ class OwnerProfileScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: Padding(
+      body: ListView(
         padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Services',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Colors.black87,
-              ),
+        children: [
+          const Text(
+            'Services',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
             ),
-            const SizedBox(height: 12),
+          ),
+          const SizedBox(height: 12),
 
-            _buildProfileCard(
-              'Mes animaux',
-              'Gérer vos compagnons',
-              Icons.pets,
-              Colors.teal,
-                  () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => PetListScreen(owner: owner)),
-              ),
+          // 🐾 Mes animaux
+          _buildProfileCard(
+            'Mes animaux',
+            'Gérer vos compagnons',
+            Icons.pets,
+            Colors.teal,
+                () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => PetListScreen(owner: owner)),
             ),
+          ),
 
-            _buildProfileCard(
-              'Vétérinaires',
-              'Trouver un spécialiste',
-              Icons.medical_services,
-              Colors.deepPurple,
-                  () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: const Row(
-                      children: [
-                        Text('🐾 Fonctionnalité à venir'),
-                      ],
-                    ),
-                    behavior: SnackBarBehavior.floating,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
+          // 🛍️ SHOP - MAINTENANT VISIBLE!
+          _buildProfileCard(
+            'Shop',
+            'Boutique en ligne',
+            Icons.shopping_bag,
+            Colors.blue,
+                () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => ShopScreen(ownerId: owner.id ?? 0)),
+            ),
+          ),
+
+          // 🩺 Vétérinaires
+          _buildProfileCard(
+            'Vétérinaires',
+            'Trouver un spécialiste',
+            Icons.medical_services,
+            Colors.deepPurple,
+                () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: const Row(
+                    children: [
+                      Text('🐾 Fonctionnalité à venir'),
+                    ],
                   ),
-                );
-              },
-            ),
-
-            _buildProfileCard(
-              'Nutrition',
-              'Conseils alimentaires',
-              Icons.restaurant,
-              Colors.orange,
-                  () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: const Row(
-                      children: [
-                        Text('🥕 Conseils nutrition à venir'),
-                      ],
-                    ),
-                    behavior: SnackBarBehavior.floating,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
+                  behavior: SnackBarBehavior.floating,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
                   ),
-                );
-              },
-            ),
+                ),
+              );
+            },
+          ),
 
-            _buildProfileCard(
-              'Activité physique',
-              'Suivi et statistiques',
-              Icons.fitness_center,
-              Colors.green,
-                  () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: const Row(
-                      children: [
-                        Text('💪 Suivi activité en développement'),
-                      ],
-                    ),
-                    behavior: SnackBarBehavior.floating,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
+          // 🥕 Nutrition
+          _buildProfileCard(
+            'Nutrition',
+            'Conseils alimentaires',
+            Icons.restaurant,
+            Colors.orange,
+                () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: const Row(
+                    children: [
+                      Text('🥕 Conseils nutrition à venir'),
+                    ],
                   ),
-                );
-              },
-            ),
-          ],
-        ),
+                  behavior: SnackBarBehavior.floating,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+              );
+            },
+          ),
+
+          // 💪 Activité physique
+          _buildProfileCard(
+            'Activité',
+            'Suivi et statistiques',
+            Icons.fitness_center,
+            Colors.green,
+
+                () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: const Row(
+                    children: [
+                      Text('💪 Suivi activité en développement'),
+                    ],
+                  ),
+                  behavior: SnackBarBehavior.floating,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+              );
+            },
+          ),
+
+          const SizedBox(height: 20),
+        ],
       ),
     );
   }

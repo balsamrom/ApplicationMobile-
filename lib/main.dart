@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:sqflite/sqflite.dart';
-import 'package:path/path.dart';
-import 'screens/login_screen.dart';
-import 'screens/shop_screen.dart';
 import 'db/database_helper.dart';
+import 'screens/login_screen.dart';
+import 'screens/owner_profile_screen.dart';
+import 'models/owner.dart';
 
-void main() async {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Supprime DB pour reset (ENLEVER EN PRODUCTION)
-  final dbPath = join(await getDatabasesPath(), 'pet.db');
-  await deleteDatabase(dbPath);
+  // ⚠️ Ne pas supprimer la DB au démarrage (gardez vos données)
+  // Si vous avez besoin de reset en dev :
+  // final dbPath = join(await getDatabasesPath(), 'pets.db');
+  // await deleteDatabase(dbPath);
 
-  // Initialiser la DB
+  // Initialise la base
   await DatabaseHelper.instance.database;
 
   runApp(const MyApp());
@@ -27,9 +27,20 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Pet Owner Manager',
       theme: ThemeData(primarySwatch: Colors.teal),
-      // 🎯 Direct au Shop (test)
-      home: const ShopScreen(ownerId: 1),
-      // Pour production: home: const LoginScreen(),
+
+      // 👉 Ouvre la page d’authentification en premier
+      home: const LoginScreen(),
+
+      // (Optionnel) routes nommées pour après le login
+      onGenerateRoute: (settings) {
+        if (settings.name == '/owner') {
+          final owner = settings.arguments as Owner;
+          return MaterialPageRoute(
+            builder: (_) => OwnerProfileScreen(owner: owner),
+          );
+        }
+        return null;
+      },
     );
   }
 }

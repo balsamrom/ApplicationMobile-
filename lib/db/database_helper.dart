@@ -27,73 +27,18 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 7, // ✅ VERSION 7
+      version: 9, // ⬆️ passe à v9 pour ajouter delivery_fee
       onCreate: _createDB,
       onUpgrade: (db, oldVersion, newVersion) async {
-        // Version 3: Ajout colonnes vétérinaires
+        print('🔄 Upgrading DB from v$oldVersion to v$newVersion');
+
+        // v3 : colonnes vétérinaires
         if (oldVersion < 3) {
           await db.execute('ALTER TABLE owners ADD COLUMN isVet INTEGER DEFAULT 0;');
           await db.execute('ALTER TABLE owners ADD COLUMN diplomaPath TEXT;');
         }
 
-        // Version 4: Création tables shop
-        if (oldVersion < 4) {
-          await db.execute('''
-            CREATE TABLE products(
-              id INTEGER PRIMARY KEY AUTOINCREMENT,
-              name TEXT NOT NULL,
-              description TEXT NOT NULL,
-              price REAL NOT NULL,
-              category TEXT NOT NULL,
-              photoPath TEXT,
-              stock INTEGER DEFAULT 0,
-              species TEXT
-            );
-          ''');
-
-          await db.execute('''
-            CREATE TABLE cart_items(
-              id INTEGER PRIMARY KEY AUTOINCREMENT,
-              owner_id INTEGER NOT NULL,
-              product_id INTEGER NOT NULL,
-              quantity INTEGER NOT NULL,
-              product_name TEXT NOT NULL,
-              product_price REAL NOT NULL,
-              product_photo TEXT,
-              FOREIGN KEY (owner_id) REFERENCES owners(id) ON DELETE CASCADE,
-              FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
-            );
-          ''');
-
-          await db.execute('''
-            CREATE TABLE orders(
-              id INTEGER PRIMARY KEY AUTOINCREMENT,
-              owner_id INTEGER NOT NULL,
-              order_date TEXT NOT NULL,
-              total_amount REAL NOT NULL,
-              status TEXT DEFAULT 'En cours',
-              delivery_address TEXT,
-              FOREIGN KEY (owner_id) REFERENCES owners(id) ON DELETE CASCADE
-            );
-          ''');
-
-          await db.execute('''
-            CREATE TABLE order_items(
-              id INTEGER PRIMARY KEY AUTOINCREMENT,
-              order_id INTEGER NOT NULL,
-              product_id INTEGER NOT NULL,
-              product_name TEXT NOT NULL,
-              quantity INTEGER NOT NULL,
-              price REAL NOT NULL,
-              FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE,
-              FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
-            );
-          ''');
-
-          await _insertSampleProducts(db);
-        }
-
-        // Version 5: Ajout promotions et galerie
+        // v5 : promos + galerie
         if (oldVersion < 5) {
           await db.execute('ALTER TABLE products ADD COLUMN isOnSale INTEGER DEFAULT 0;');
           await db.execute('ALTER TABLE products ADD COLUMN salePrice REAL;');
@@ -101,7 +46,7 @@ class DatabaseHelper {
           await db.execute('ALTER TABLE products ADD COLUMN additionalPhotos TEXT;');
         }
 
-        // Version 6: Ajout infos commande détaillées
+        // v6 : infos commande détaillées
         if (oldVersion < 6) {
           await db.execute('ALTER TABLE orders ADD COLUMN phone_number TEXT;');
           await db.execute('ALTER TABLE orders ADD COLUMN delivery_method TEXT;');
@@ -109,10 +54,10 @@ class DatabaseHelper {
           await db.execute('ALTER TABLE orders ADD COLUMN notes TEXT;');
         }
 
-        // ✅ Version 7: Table Favoris
+        // v7 : table favoris
         if (oldVersion < 7) {
           await db.execute('''
-            CREATE TABLE favorites(
+            CREATE TABLE IF NOT EXISTS favorites(
               id INTEGER PRIMARY KEY AUTOINCREMENT,
               owner_id INTEGER NOT NULL,
               product_id INTEGER NOT NULL,
@@ -123,12 +68,21 @@ class DatabaseHelper {
             );
           ''');
         }
+
+        // v9 : frais de livraison
+        if (oldVersion < 9) {
+          // Ajoute la colonne si elle n'existe pas déjà
+          await db.execute('ALTER TABLE orders ADD COLUMN delivery_fee REAL DEFAULT 0;');
+          print('✅ Added orders.delivery_fee (v9)');
+        }
       },
     );
   }
 
   Future _createDB(Database db, int version) async {
-    // Table Owners
+    print('🎨 Creating database v$version');
+
+    // Owners
     await db.execute('''
       CREATE TABLE owners(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -143,7 +97,7 @@ class DatabaseHelper {
       );
     ''');
 
-    // Table Pets
+    // Pets
     await db.execute('''
       CREATE TABLE pets(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -159,7 +113,7 @@ class DatabaseHelper {
       );
     ''');
 
-    // Table Documents
+    // Documents
     await db.execute('''
       CREATE TABLE documents(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -172,7 +126,7 @@ class DatabaseHelper {
       );
     ''');
 
-    // Table Products (avec promotions et galerie)
+    // Products
     await db.execute('''
       CREATE TABLE products(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -190,7 +144,7 @@ class DatabaseHelper {
       );
     ''');
 
-    // Table Cart Items
+    // Cart items
     await db.execute('''
       CREATE TABLE cart_items(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -205,7 +159,7 @@ class DatabaseHelper {
       );
     ''');
 
-    // Table Orders (avec infos complètes)
+    // Orders (incl. delivery_fee)
     await db.execute('''
       CREATE TABLE orders(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -218,11 +172,12 @@ class DatabaseHelper {
         delivery_method TEXT,
         payment_method TEXT,
         notes TEXT,
+        delivery_fee REAL DEFAULT 0,
         FOREIGN KEY (owner_id) REFERENCES owners(id) ON DELETE CASCADE
       );
     ''');
 
-    // Table Order Items
+    // Order items
     await db.execute('''
       CREATE TABLE order_items(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -236,7 +191,7 @@ class DatabaseHelper {
       );
     ''');
 
-    // ✅ Table Favorites
+    // Favorites
     await db.execute('''
       CREATE TABLE favorites(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -249,8 +204,8 @@ class DatabaseHelper {
       );
     ''');
 
-    // Insérer produits d'exemple
     await _insertSampleProducts(db);
+    print('✅ Database created successfully!');
   }
 
   Future _insertSampleProducts(Database db) async {
@@ -498,7 +453,12 @@ class DatabaseHelper {
 
   Future<List<Order>> getOrdersByOwner(int ownerId) async {
     final db = await instance.database;
-    final res = await db.query('orders', where: 'owner_id = ?', whereArgs: [ownerId], orderBy: 'order_date DESC');
+    final res = await db.query(
+      'orders',
+      where: 'owner_id = ?',
+      whereArgs: [ownerId],
+      orderBy: 'order_date DESC',
+    );
     return res.map((m) => Order.fromMap(m)).toList();
   }
 
@@ -528,7 +488,7 @@ class DatabaseHelper {
         'added_date': DateTime.now().toIso8601String(),
       });
     } catch (e) {
-      return 0; // Déjà dans les favoris
+      return 0; // déjà présent
     }
   }
 

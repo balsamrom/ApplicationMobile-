@@ -1,15 +1,16 @@
-
 class Order {
   int? id;
   int ownerId;
   String orderDate;
-  double totalAmount;
+  double totalAmount;       // total final (articles + frais)
   String status;
   String? deliveryAddress;
   String? phoneNumber;
   String? deliveryMethod;
   String? paymentMethod;
   String? notes;
+
+  double deliveryFee;       // ✅ NOUVEAU
 
   Order({
     this.id,
@@ -22,6 +23,7 @@ class Order {
     this.deliveryMethod,
     this.paymentMethod,
     this.notes,
+    this.deliveryFee = 0.0, // ✅
   });
 
   Map<String, dynamic> toMap() => {
@@ -35,6 +37,7 @@ class Order {
     'delivery_method': deliveryMethod,
     'payment_method': paymentMethod,
     'notes': notes,
+    'delivery_fee': deliveryFee, // ✅
   };
 
   factory Order.fromMap(Map<String, dynamic> map) => Order(
@@ -48,6 +51,7 @@ class Order {
     deliveryMethod: map['delivery_method'] as String?,
     paymentMethod: map['payment_method'] as String?,
     notes: map['notes'] as String?,
+    deliveryFee: (map['delivery_fee'] as num?)?.toDouble() ?? 0.0, // ✅
   );
 
   // Helper pour obtenir DateTime depuis String
@@ -75,6 +79,7 @@ class Order {
     String? deliveryMethod,
     String? paymentMethod,
     String? notes,
+    double? deliveryFee,
   }) {
     return Order(
       id: id ?? this.id,
@@ -87,6 +92,7 @@ class Order {
       deliveryMethod: deliveryMethod ?? this.deliveryMethod,
       paymentMethod: paymentMethod ?? this.paymentMethod,
       notes: notes ?? this.notes,
+      deliveryFee: deliveryFee ?? this.deliveryFee, // ✅
     );
   }
 }
