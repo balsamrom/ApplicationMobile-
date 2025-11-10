@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import '../models/product.dart';
 import '../db/database_helper.dart';
+import '../widgets/unsplash_photo_picker.dart'; // ← IMPORT JDID
 
 class AdminProductsScreen extends StatefulWidget {
   const AdminProductsScreen({super.key});
@@ -341,9 +342,9 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
   String _selectedCategory = 'Aliments';
   String? _selectedSpecies;
   File? _imageFile;
+  String? _photoPath; // ← NOUVEAU: pour stocker le path
   bool _isSaving = false;
 
-  // ✅ NOUVEAUX CHAMPS PROMO
   bool _isOnSale = false;
   int? _salePercentage;
 
@@ -361,7 +362,6 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
       _selectedCategory = widget.product!.category;
       _selectedSpecies = widget.product!.species;
 
-      // ✅ Charger les données promo
       _isOnSale = widget.product!.isOnSale;
       _salePercentage = widget.product!.salePercentage;
       if (widget.product!.salePrice != null) {
@@ -370,6 +370,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
 
       if (widget.product!.photoPath != null) {
         _imageFile = File(widget.product!.photoPath!);
+        _photoPath = widget.product!.photoPath;
       }
     }
   }
@@ -384,7 +385,6 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
     super.dispose();
   }
 
-  // ✅ Calculer automatiquement le prix promo
   void _calculateSalePrice() {
     if (_priceController.text.isEmpty || _salePercentage == null) return;
 
@@ -399,8 +399,28 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
     final picker = ImagePicker();
     final pickedFile = await picker.pickImage(source: ImageSource.gallery);
     if (pickedFile != null) {
-      setState(() => _imageFile = File(pickedFile.path));
+      setState(() {
+        _imageFile = File(pickedFile.path);
+        _photoPath = pickedFile.path;
+      });
     }
+  }
+
+  // ← NOUVEAU: Ouvrir Unsplash Picker
+  void _openUnsplashPicker() {
+    showDialog(
+      context: context,
+      builder: (context) => UnsplashPhotoPicker(
+        category: _selectedCategory,
+        species: _selectedSpecies,
+        onPhotoSelected: (photoPath) {
+          setState(() {
+            _imageFile = File(photoPath);
+            _photoPath = photoPath;
+          });
+        },
+      ),
+    );
   }
 
   Future<void> _saveProduct() async {
@@ -417,9 +437,8 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
         category: _selectedCategory,
         stock: int.parse(_stockController.text),
         species: _selectedSpecies,
-        photoPath: _imageFile?.path,
+        photoPath: _photoPath, // ← Utilise _photoPath
 
-        // ✅ Données promo
         isOnSale: _isOnSale,
         salePrice: _isOnSale && _salePriceController.text.isNotEmpty
             ? double.parse(_salePriceController.text)
@@ -476,7 +495,9 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            // Image
+            // ============================================
+            // 📸 IMAGE AVEC DEUX BOUTONS
+            // ============================================
             GestureDetector(
               onTap: _pickImage,
               child: Container(
@@ -494,7 +515,8 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                     : Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.add_photo_alternate, size: 60, color: Colors.grey[600]),
+                    Icon(Icons.add_photo_alternate,
+                        size: 60, color: Colors.grey[600]),
                     const SizedBox(height: 8),
                     Text(
                       'Appuyer pour ajouter une photo',
@@ -503,6 +525,45 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                   ],
                 ),
               ),
+            ),
+
+            const SizedBox(height: 12),
+
+            // ← BOUTONS GALERIE ET UNSPLASH
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: _pickImage,
+                    icon: const Icon(Icons.photo_library),
+                    label: const Text('Galerie'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.teal,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: _openUnsplashPicker,
+                    icon: const Icon(Icons.cloud_download),
+                    label: const Text('Unsplash HD'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.purple,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
 
             const SizedBox(height: 20),
@@ -515,7 +576,8 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                 border: OutlineInputBorder(),
                 prefixIcon: Icon(Icons.inventory_2),
               ),
-              validator: (v) => v == null || v.trim().isEmpty ? 'Champ requis' : null,
+              validator: (v) =>
+              v == null || v.trim().isEmpty ? 'Champ requis' : null,
             ),
 
             const SizedBox(height: 16),
@@ -529,7 +591,8 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                 prefixIcon: Icon(Icons.description),
               ),
               maxLines: 3,
-              validator: (v) => v == null || v.trim().isEmpty ? 'Champ requis' : null,
+              validator: (v) =>
+              v == null || v.trim().isEmpty ? 'Champ requis' : null,
             ),
 
             const SizedBox(height: 16),
@@ -590,7 +653,8 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                     items: _categories.map((cat) {
                       return DropdownMenuItem(value: cat, child: Text(cat));
                     }).toList(),
-                    onChanged: (value) => setState(() => _selectedCategory = value!),
+                    onChanged: (value) =>
+                        setState(() => _selectedCategory = value!),
                   ),
                 ),
                 const SizedBox(width: 16),
@@ -608,7 +672,8 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                         return DropdownMenuItem(value: sp, child: Text(sp));
                       }),
                     ],
-                    onChanged: (value) => setState(() => _selectedSpecies = value),
+                    onChanged: (value) =>
+                        setState(() => _selectedSpecies = value),
                   ),
                 ),
               ],
@@ -616,9 +681,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
 
             const SizedBox(height: 24),
 
-            // ============================================
-            // ✅ SECTION PROMOTION
-            // ============================================
+            // SECTION PROMOTION
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -656,7 +719,6 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                       ),
                     ],
                   ),
-
                   if (_isOnSale) ...[
                     const SizedBox(height: 16),
                     const Text(
@@ -729,7 +791,8 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                   _isSaving
                       ? 'Enregistrement...'
                       : (isEditing ? 'Modifier' : 'Ajouter'),
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                      fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.deepPurple,
