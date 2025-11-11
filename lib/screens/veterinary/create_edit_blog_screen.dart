@@ -4,6 +4,7 @@ import 'dart:io';
 import '../../models/blog.dart';
 import '../../models/owner.dart';
 import '../../db/database_helper.dart';
+import '../../services/openai_service.dart';
 
 class CreateEditBlogScreen extends StatefulWidget {
   final Owner vet;
@@ -26,6 +27,7 @@ class _CreateEditBlogScreenState extends State<CreateEditBlogScreen> {
   String? _imagePath;
   String _selectedCategory = 'Conseils';
   bool _isLoading = false;
+  bool _isGeneratingContent = false;
 
   final List<String> _categories = [
     'Santé',
@@ -45,6 +47,10 @@ class _CreateEditBlogScreenState extends State<CreateEditBlogScreen> {
       _imagePath = widget.blog!.imagePath;
       _selectedCategory = widget.blog!.category;
     }
+    // Add listener to update button state when title changes
+    _titleController.addListener(() {
+      setState(() {});
+    });
   }
 
   @override
@@ -122,6 +128,65 @@ class _CreateEditBlogScreenState extends State<CreateEditBlogScreen> {
     );
   }
 
+  Future<void> _generateContentWithAI() async {
+    if (_titleController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Veuillez d\'abord entrer un titre'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    setState(() => _isGeneratingContent = true);
+
+    try {
+      final generatedContent = await OpenAIService.generateBlogContent(
+        title: _titleController.text.trim(),
+        category: _selectedCategory,
+        maxLength: 1000,
+      );
+
+      if (generatedContent != null && generatedContent.isNotEmpty) {
+        setState(() {
+          _contentController.text = generatedContent;
+          _isGeneratingContent = false;
+        });
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('✅ Contenu généré avec succès !'),
+              backgroundColor: Colors.green,
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
+      } else {
+        setState(() => _isGeneratingContent = false);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('❌ Erreur lors de la génération. Veuillez réessayer.'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      debugPrint('Erreur génération IA: $e');
+      setState(() => _isGeneratingContent = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erreur: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   Future<void> _saveBlog() async {
     if (!_formKey.currentState!.validate()) {
       return;
@@ -183,8 +248,14 @@ class _CreateEditBlogScreenState extends State<CreateEditBlogScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.blog == null ? 'Nouveau Blog' : 'Modifier le Blog'),
-        backgroundColor: Colors.teal,
+        title: Text(
+          widget.blog == null ? 'Nouveau Blog' : 'Modifier le Blog',
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            letterSpacing: 0.5,
+          ),
+        ),
+        backgroundColor: const Color(0xFF6366F1),
         foregroundColor: Colors.white,
         actions: [
           if (_isLoading)
@@ -309,27 +380,99 @@ class _CreateEditBlogScreenState extends State<CreateEditBlogScreen> {
               const SizedBox(height: 16),
 
               // Contenu
-              TextFormField(
-                controller: _contentController,
-                decoration: InputDecoration(
-                  labelText: 'Contenu *',
-                  hintText: 'Rédigez votre article...',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextFormField(
+                      controller: _contentController,
+                      decoration: InputDecoration(
+                        labelText: 'Contenu *',
+                        hintText: 'Rédigez votre article...',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        alignLabelWithHint: true,
+                      ),
+                      maxLines: 15,
+                      maxLength: 5000,
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return 'Le contenu est requis';
+                        }
+                        if (value.trim().length < 50) {
+                          return 'Le contenu doit contenir au moins 50 caractères';
+                        }
+                        return null;
+                      },
+                    ),
                   ),
-                  alignLabelWithHint: true,
+                ],
+              ),
+              const SizedBox(height: 12),
+              // Bouton Générer avec IA
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.teal.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.teal.withOpacity(0.3)),
                 ),
-                maxLines: 15,
-                maxLength: 5000,
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Le contenu est requis';
-                  }
-                  if (value.trim().length < 50) {
-                    return 'Le contenu doit contenir au moins 50 caractères';
-                  }
-                  return null;
-                },
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Icons.info_outline, size: 16, color: Colors.teal[700]),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'Vous n\'avez pas besoin d\'écrire le contenu. L\'IA le générera automatiquement à partir du titre et de la catégorie.',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.teal[700],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: _isGeneratingContent || _titleController.text.trim().isEmpty
+                            ? null
+                            : _generateContentWithAI,
+                        icon: _isGeneratingContent
+                            ? const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                ),
+                              )
+                            : const Icon(Icons.auto_awesome),
+                        label: Text(
+                          _isGeneratingContent
+                              ? 'Génération en cours...'
+                              : _titleController.text.trim().isEmpty
+                                  ? 'Entrez d\'abord un titre'
+                                  : 'Générer le contenu avec l\'IA',
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF6366F1),
+                          foregroundColor: Colors.white,
+                          disabledBackgroundColor: Colors.grey[300],
+                          disabledForegroundColor: Colors.grey[600],
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
               const SizedBox(height: 24),
 

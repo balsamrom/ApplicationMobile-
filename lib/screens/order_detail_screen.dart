@@ -147,7 +147,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Commande #${widget.order.id}'),
-        backgroundColor: Colors.teal,
+        backgroundColor: const Color(0xFF6366F1),
         foregroundColor: Colors.white,
         actions: [
           IconButton(

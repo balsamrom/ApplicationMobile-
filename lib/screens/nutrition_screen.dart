@@ -44,7 +44,15 @@ class _NutritionScreenState extends State<NutritionScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Nutrition pour ${widget.pet.name}'),
+        title: Text(
+          'Nutrition pour ${widget.pet.name}',
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            letterSpacing: 0.5,
+          ),
+        ),
+        backgroundColor: const Color(0xFF6366F1),
+        foregroundColor: Colors.white,
         actions: [
           IconButton(
             icon: const Icon(Icons.settings_outlined),

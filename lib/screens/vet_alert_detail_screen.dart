@@ -26,8 +26,15 @@ class _VetAlertDetailScreenState extends State<VetAlertDetailScreen> {
     return Scaffold(
       backgroundColor: Colors.grey[200],
       appBar: AppBar(
-        title: Text("Urgence: ${widget.details.pet.name}"),
-        backgroundColor: Colors.red[700],
+        title: Text(
+          "Urgence: ${widget.details.pet.name}",
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            letterSpacing: 0.5,
+          ),
+        ),
+        backgroundColor: const Color(0xFFEF4444),
+        foregroundColor: Colors.white,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),

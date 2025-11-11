@@ -99,7 +99,7 @@ class _VetProfileEditorScreenState extends State<VetProfileEditorScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Modifier mon profil'),
-        backgroundColor: primaryPurple,
+        backgroundColor: const Color(0xFF6366F1),
         elevation: 0,
       ),
       body: SingleChildScrollView(
@@ -281,7 +281,7 @@ class _VetProfileEditorScreenState extends State<VetProfileEditorScreen> {
           style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
         ),
         style: ElevatedButton.styleFrom(
-          backgroundColor: primaryPurple,
+          backgroundColor: const Color(0xFF6366F1),
           padding: const EdgeInsets.symmetric(vertical: 16),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           elevation: 3,

@@ -449,7 +449,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                           children: [
                             Chip(
                               label: Text(widget.product.category),
-                              backgroundColor: Colors.teal[50],
+                              backgroundColor: const Color(0xFF6366F1).withOpacity(0.1),
                               avatar: const Icon(
                                 Icons.category,
                                 size: 18,
@@ -735,7 +735,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                           ),
                         ),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.teal,
+                          backgroundColor: const Color(0xFF6366F1),
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(

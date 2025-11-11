@@ -52,8 +52,15 @@ class _VetAlertListScreenState extends State<VetAlertListScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Alertes d'Urgence"),
-        backgroundColor: Colors.orange[800],
+        title: const Text(
+          "Alertes d'Urgence",
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            letterSpacing: 0.5,
+          ),
+        ),
+        backgroundColor: const Color(0xFFEF4444),
+        foregroundColor: Colors.white,
       ),
       body: FutureBuilder<List<AlertDetails>>(
         future: _alertsFuture,

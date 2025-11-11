@@ -88,7 +88,7 @@ class _VeterinaryMapViewState extends State<VeterinaryMapView> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Carte des Vétérinaires'),
-        backgroundColor: primaryPurple,
+        backgroundColor: const Color(0xFF6366F1),
       ),
       body: _cabinets.isEmpty
           ? const Center(child: CircularProgressIndicator())

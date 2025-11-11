@@ -178,7 +178,7 @@ class OrderConfirmationScreen extends StatelessWidget {
                     icon: const Icon(Icons.history, size: 24),
                     label: const Text('Voir mes commandes', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.teal,
+                      backgroundColor: const Color(0xFF6366F1),
                       foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       elevation: 2,

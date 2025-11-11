@@ -4,6 +4,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:pet_owner_app/models/owner.dart';
 import 'package:pet_owner_app/db/database_helper.dart';
 import 'package:pet_owner_app/screens/login_screen.dart';
+import 'package:pet_owner_app/theme/app_theme.dart';
 
 class SettingsScreen extends StatefulWidget {
   final Owner owner;
@@ -35,13 +36,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
-        title: const Text('Paramètres'),
+        title: const Text(
+          'Paramètres',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            letterSpacing: 0.5,
+          ),
+        ),
+        backgroundColor: const Color(0xFF6366F1),
       ),
       body: ListView(
         children: [
           _buildProfileHeader(),
-          const SizedBox(height: 20),
+          const SizedBox(height: 8),
           _buildSectionTitle('Compte'),
           _buildSettingsTile(
             icon: Icons.person_outline,
@@ -53,27 +62,50 @@ class _SettingsScreenState extends State<SettingsScreen> {
             title: 'Changer le mot de passe',
             onTap: () { /* TODO: Implement change password */ },
           ),
-          const Divider(),
+          const SizedBox(height: 8),
           _buildSectionTitle('Application'),
-          SwitchListTile(
-            secondary: const Icon(Icons.notifications_none),
-            title: const Text('Notifications'),
-            value: true, // Replace with actual notification state
-            onChanged: (bool value) { /* TODO: Handle notification state */ },
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: AppTheme.cardShadow,
+            ),
+            child: SwitchListTile(
+              secondary: Icon(Icons.notifications_none, color: AppTheme.primaryColor),
+              title: const Text('Notifications'),
+              value: true,
+              onChanged: (bool value) { /* TODO: Handle notification state */ },
+              activeColor: AppTheme.primaryColor,
+            ),
           ),
           _buildSettingsTile(
             icon: Icons.language,
             title: 'Langue',
-            trailing: const Text('Français'),
+            trailing: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: AppTheme.primaryColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: const Text(
+                'Français',
+                style: TextStyle(
+                  color: AppTheme.primaryColor,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
             onTap: () { /* TODO: Implement language selection */ },
           ),
-          const Divider(),
+          const SizedBox(height: 8),
           _buildSettingsTile(
             icon: Icons.logout,
             title: 'Déconnexion',
-            color: Colors.red,
+            color: AppTheme.errorColor,
             onTap: _logout,
           ),
+          const SizedBox(height: 20),
         ],
       ),
     );
@@ -83,27 +115,65 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final backgroundImage = _getImageProvider(_currentOwner.photoPath);
 
     return Container(
-      padding: const EdgeInsets.all(20),
+      margin: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        gradient: AppTheme.primaryGradient,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: AppTheme.primaryColor.withOpacity(0.3),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
       child: Row(
         children: [
-          CircleAvatar(
-            radius: 40,
-            backgroundImage: backgroundImage,
-            child: backgroundImage == null ? const Icon(Icons.person, size: 40) : null,
+          Container(
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: Colors.white, width: 3),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.2),
+                  blurRadius: 10,
+                ),
+              ],
+            ),
+            child: CircleAvatar(
+              radius: 40,
+              backgroundImage: backgroundImage,
+              backgroundColor: Colors.white.withOpacity(0.2),
+              child: backgroundImage == null
+                  ? const Icon(Icons.person, size: 40, color: Colors.white)
+                  : null,
+            ),
           ),
           const SizedBox(width: 20),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                _currentOwner.name,
-                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
-              Text(
-                _currentOwner.email ?? '',
-                style: const TextStyle(fontSize: 16, color: Colors.grey),
-              ),
-            ],
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  _currentOwner.name,
+                  style: const TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  _currentOwner.email ?? '',
+                  style: TextStyle(
+                    fontSize: 15,
+                    color: Colors.white.withOpacity(0.9),
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -112,10 +182,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Widget _buildSectionTitle(String title) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       child: Text(
         title.toUpperCase(),
-        style: TextStyle(color: Theme.of(context).primaryColor, fontWeight: FontWeight.bold),
+        style: TextStyle(
+          color: AppTheme.textSecondary,
+          fontWeight: FontWeight.bold,
+          fontSize: 12,
+          letterSpacing: 1.2,
+        ),
       ),
     );
   }
@@ -127,11 +202,36 @@ class _SettingsScreenState extends State<SettingsScreen> {
     required VoidCallback onTap,
     Color? color,
   }) {
-    return ListTile(
-      leading: Icon(icon, color: color ?? Colors.grey[600]),
-      title: Text(title, style: TextStyle(color: color)),
-      trailing: trailing,
-      onTap: onTap,
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: AppTheme.cardShadow,
+      ),
+      child: ListTile(
+        leading: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: (color ?? AppTheme.primaryColor).withOpacity(0.1),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(icon, color: color ?? AppTheme.primaryColor, size: 22),
+        ),
+        title: Text(
+          title,
+          style: TextStyle(
+            color: color ?? AppTheme.textPrimary,
+            fontWeight: FontWeight.w600,
+            fontSize: 15,
+          ),
+        ),
+        trailing: trailing ?? Icon(Icons.chevron_right, color: Colors.grey[400]),
+        onTap: onTap,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+      ),
     );
   }
 

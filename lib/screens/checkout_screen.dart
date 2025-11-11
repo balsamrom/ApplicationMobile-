@@ -143,7 +143,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Finaliser la commande'),
-        backgroundColor: Colors.teal,
+        backgroundColor: const Color(0xFF6366F1),
         foregroundColor: Colors.white,
       ),
       body: _isProcessing
@@ -357,7 +357,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   icon: const Icon(Icons.check_circle, size: 28),
                   label: const Text('Confirmer la commande', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.teal,
+                    backgroundColor: const Color(0xFF6366F1),
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     elevation: 3,

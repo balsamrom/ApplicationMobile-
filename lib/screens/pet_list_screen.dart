@@ -56,11 +56,18 @@ class _PetListScreenState extends State<PetListScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.purpose == 'nutrition'
-            ? 'Suivi Nutritionnel'
-            : widget.purpose == 'activity'
-                ? 'Suivi d\'Activité'
-                : 'Suivi de Santé'), // Modification du titre
+        title: Text(
+          widget.purpose == 'nutrition'
+              ? 'Suivi Nutritionnel'
+              : widget.purpose == 'activity'
+                  ? 'Suivi d\'Activité'
+                  : 'Suivi de Santé',
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            letterSpacing: 0.5,
+          ),
+        ),
+        backgroundColor: const Color(0xFF6366F1),
         actions: [
           IconButton(
             icon: const Icon(Icons.settings_outlined),

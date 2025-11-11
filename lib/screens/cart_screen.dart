@@ -209,7 +209,7 @@ class _CartScreenState extends State<CartScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('🛒 Mon Panier'),
-        backgroundColor: Colors.teal,
+        backgroundColor: const Color(0xFF6366F1),
         foregroundColor: Colors.white,
         actions: [
           if (_cartItems.isNotEmpty)
@@ -246,7 +246,7 @@ class _CartScreenState extends State<CartScreen> {
               icon: const Icon(Icons.shopping_bag),
               label: const Text('Continuer mes achats'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.teal,
+                backgroundColor: const Color(0xFF6366F1),
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(
                   horizontal: 24,
@@ -446,7 +446,7 @@ class _CartScreenState extends State<CartScreen> {
                         ),
                       ),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.teal,
+                        backgroundColor: const Color(0xFF6366F1),
                         foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),

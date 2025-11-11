@@ -217,13 +217,19 @@ class _BlogDetailScreenState extends State<BlogDetailScreen> {
       );
     }
 
-    final dateFormat = DateFormat('dd MMMM yyyy', 'fr');
-    final timeFormat = DateFormat('HH:mm', 'fr');
+    final dateFormat = DateFormat('dd/MM/yyyy');
+    final timeFormat = DateFormat('HH:mm');
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Blog'),
-        backgroundColor: Colors.teal,
+        title: const Text(
+          'Blog',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            letterSpacing: 0.5,
+          ),
+        ),
+        backgroundColor: const Color(0xFF6366F1),
         foregroundColor: Colors.white,
       ),
       body: SingleChildScrollView(
@@ -374,7 +380,7 @@ class _BlogDetailScreenState extends State<BlogDetailScreen> {
                           icon: const Icon(Icons.contact_mail),
                           label: const Text('Contacter'),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.teal,
+                            backgroundColor: const Color(0xFF6366F1),
                             foregroundColor: Colors.white,
                             padding: const EdgeInsets.symmetric(vertical: 12),
                           ),

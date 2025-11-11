@@ -127,8 +127,14 @@ class _VetBlogManagementScreenState extends State<VetBlogManagementScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Gestion des Blogs'),
-        backgroundColor: Colors.teal,
+        title: const Text(
+          'Gestion des Blogs',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            letterSpacing: 0.5,
+          ),
+        ),
+        backgroundColor: const Color(0xFF6366F1),
         foregroundColor: Colors.white,
         bottom: TabBar(
           controller: _tabController,
@@ -162,7 +168,7 @@ class _VetBlogManagementScreenState extends State<VetBlogManagementScreen>
         },
         icon: const Icon(Icons.add),
         label: const Text('Nouveau Blog'),
-        backgroundColor: Colors.teal,
+        backgroundColor: const Color(0xFF6366F1),
       ),
     );
   }

@@ -62,7 +62,7 @@ class _BookSearchScreenState extends State<BookSearchScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Recherche de Livres Vétérinaires'),
-        backgroundColor: primaryPurple,
+        backgroundColor: const Color(0xFF6366F1),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),

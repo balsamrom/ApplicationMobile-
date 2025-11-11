@@ -23,11 +23,16 @@ class _AdminScreenState extends State<AdminScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Panneau Administrateur',
-            style: TextStyle(fontWeight: FontWeight.bold)),
-        elevation: 1,
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
+        title: const Text(
+          'Panneau Administrateur',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            letterSpacing: 0.5,
+          ),
+        ),
+        elevation: 0,
+        backgroundColor: const Color(0xFF6366F1),
+        foregroundColor: Colors.white,
       ),
       body: IndexedStack(
         index: _currentIndex,

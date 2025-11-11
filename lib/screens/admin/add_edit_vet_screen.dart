@@ -52,8 +52,15 @@ class _AddEditVetScreenState extends State<AddEditVetScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(_isEditing ? 'Modifier Vétérinaire' : 'Ajouter Vétérinaire'),
-        backgroundColor: Colors.indigo,
+        title: Text(
+          _isEditing ? 'Modifier Vétérinaire' : 'Ajouter Vétérinaire',
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            letterSpacing: 0.5,
+          ),
+        ),
+        backgroundColor: const Color(0xFF6366F1),
+        foregroundColor: Colors.white,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),

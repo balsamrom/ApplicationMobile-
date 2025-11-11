@@ -106,7 +106,15 @@ class _AddPetScreenState extends State<AddPetScreen> {
     final breeds = _selectedSpecies != null ? _breedMap[_selectedSpecies!] ?? [] : [];
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.pet == null ? 'Ajouter un animal' : 'Modifier l\'animal'),
+        backgroundColor: const Color(0xFF6366F1),
+        foregroundColor: Colors.white,
+        title: Text(
+          widget.pet == null ? 'Ajouter un animal' : 'Modifier l\'animal',
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            letterSpacing: 0.5,
+          ),
+        ),
       ),
       body: Form(
         key: _formKey,

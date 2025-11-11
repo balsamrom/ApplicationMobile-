@@ -146,7 +146,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
             icon: const Icon(Icons.shopping_cart),
             label: const Text('Commencer mes achats'),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.teal,
+              backgroundColor: const Color(0xFF6366F1),
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
             ),

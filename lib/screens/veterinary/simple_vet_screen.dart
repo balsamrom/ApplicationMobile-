@@ -270,18 +270,78 @@ class SimpleVetScreenState extends State<SimpleVetScreen> with SingleTickerProvi
 
   Widget _buildAppointmentCard(VeterinaryAppointment app) {
     final isPast = app.dateTime.isBefore(DateTime.now());
+    final isCancelled = app.status == 'cancelled';
+    
+    Color avatarColor;
+    IconData avatarIcon;
+    
+    if (isCancelled) {
+      avatarColor = Colors.red[300]!;
+      avatarIcon = Icons.cancel;
+    } else if (isPast) {
+      avatarColor = Colors.grey[300]!;
+      avatarIcon = Icons.history;
+    } else {
+      avatarColor = const Color(0xFF7C4DFF);
+      avatarIcon = Icons.event_available;
+    }
+    
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       elevation: 2,
       margin: const EdgeInsets.only(bottom: 12),
+      color: isCancelled ? Colors.red[50] : null,
       child: ListTile(
         leading: CircleAvatar(
-          backgroundColor: isPast ? Colors.grey[300] : const Color(0xFF7C4DFF),
-          child: Icon(isPast ? Icons.history : Icons.event_available, color: Colors.white),
+          backgroundColor: avatarColor,
+          child: Icon(avatarIcon, color: Colors.white),
         ),
-        title: Text(app.petName, style: const TextStyle(fontWeight: FontWeight.bold)),
-        subtitle: Text(
-          'Dr. ${app.veterinaryName}\n${DateFormat('dd/MM/yyyy à HH:mm').format(app.dateTime)}',
+        title: Row(
+          children: [
+            Expanded(
+              child: Text(
+                app.petName,
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  decoration: isCancelled ? TextDecoration.lineThrough : null,
+                  color: isCancelled ? Colors.grey[600] : null,
+                ),
+              ),
+            ),
+            if (isCancelled)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.red,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Text(
+                  'ANNULÉ',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+          ],
+        ),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Dr. ${app.veterinaryName}',
+              style: TextStyle(
+                color: isCancelled ? Colors.grey[600] : null,
+              ),
+            ),
+            Text(
+              DateFormat('dd/MM/yyyy à HH:mm').format(app.dateTime),
+              style: TextStyle(
+                color: isCancelled ? Colors.grey[600] : null,
+              ),
+            ),
+          ],
         ),
       ),
     );

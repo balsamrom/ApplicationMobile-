@@ -195,7 +195,7 @@ class _ShopScreenState extends State<ShopScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('🛍️ Boutique PetShop'),
-        backgroundColor: Colors.teal,
+        backgroundColor: const Color(0xFF6366F1),
         foregroundColor: Colors.white,
         actions: [
           // 🐾 BOUTON: Encyclopédie des Races

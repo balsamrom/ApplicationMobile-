@@ -48,7 +48,15 @@ class _ActivityScreenState extends State<ActivityScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Activité pour ${widget.pet.name}'),
+        backgroundColor: const Color(0xFF6366F1),
+        foregroundColor: Colors.white,
+        title: Text(
+          'Activité pour ${widget.pet.name}',
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            letterSpacing: 0.5,
+          ),
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.settings_outlined),

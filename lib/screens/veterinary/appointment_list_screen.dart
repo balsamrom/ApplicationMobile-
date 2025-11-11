@@ -36,7 +36,7 @@ class AppointmentListScreenState extends State<AppointmentListScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Mes Rendez-vous'),
-        backgroundColor: Colors.teal,
+        backgroundColor: const Color(0xFF6366F1),
       ),
       body: FutureBuilder<List<VeterinaryAppointment>>(
         future: _appointments,

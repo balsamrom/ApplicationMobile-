@@ -37,7 +37,15 @@ class _HealthTrackingScreenState extends State<HealthTrackingScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Suivi de ${widget.pet.name}'),
+        title: Text(
+          'Suivi de ${widget.pet.name}',
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            letterSpacing: 0.5,
+          ),
+        ),
+        backgroundColor: const Color(0xFF6366F1),
+        foregroundColor: Colors.white,
       ),
       body: FutureBuilder<Map<String, List>>(
         future: _dataFuture,

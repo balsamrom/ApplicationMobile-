@@ -174,8 +174,8 @@ class _FirstAidDetailScreenState extends State<FirstAidDetailScreen> {
       appBar: AppBar(
         title: Text(_translations['title']!),
         backgroundColor: _isEmergencyMode
-            ? Colors.red
-            : const Color(0xFF009688),
+            ? const Color(0xFFEF4444)
+            : const Color(0xFF6366F1),
         foregroundColor: Colors.white,
         actions: [
           IconButton(

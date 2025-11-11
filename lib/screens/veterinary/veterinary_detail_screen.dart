@@ -56,7 +56,7 @@ class VeterinaryDetailScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text('Dr. ${vet.name}'),
-        backgroundColor: primaryPurple,
+        backgroundColor: const Color(0xFF6366F1),
       ),
       body: SingleChildScrollView(
         child: Column(

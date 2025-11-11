@@ -27,7 +27,7 @@ class _VeterinaryListScreenState extends State<VeterinaryListScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Trouver un vétérinaire'),
-        backgroundColor: Colors.teal,
+        backgroundColor: const Color(0xFF6366F1),
       ),
       body: FutureBuilder<List<Owner>>( 
         future: _vetsFuture,

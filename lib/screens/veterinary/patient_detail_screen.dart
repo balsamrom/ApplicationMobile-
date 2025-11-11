@@ -49,7 +49,7 @@ class _PatientDetailScreenState extends State<PatientDetailScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Fiche de ${widget.patient.name}'),
-        backgroundColor: primaryPurple,
+        backgroundColor: const Color(0xFF6366F1),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),

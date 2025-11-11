@@ -25,6 +25,53 @@ class AppointmentsScreenState extends State<AppointmentsScreen> {
     });
   }
 
+  Future<void> _cancelAppointment(VeterinaryAppointment appointment) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Annuler le rendez-vous'),
+        content: Text(
+          'Êtes-vous sûr de vouloir annuler le rendez-vous pour ${appointment.petName} avec Dr. ${appointment.veterinaryName} ?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Non'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Oui, annuler'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      try {
+        await DatabaseHelper.instance.cancelAppointment(appointment.id!);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Rendez-vous annulé avec succès'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          _loadAppointments();
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Erreur lors de l\'annulation: $e'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    }
+  }
+
   // La fonction qui prépare et appelle l'API du calendrier
   void _addAppointmentToCalendar(VeterinaryAppointment appointment) {
     final Event event = Event(
@@ -44,7 +91,7 @@ class AppointmentsScreenState extends State<AppointmentsScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Mes Rendez-vous'),
-        backgroundColor: Colors.teal,
+        backgroundColor: const Color(0xFF6366F1),
         foregroundColor: Colors.white,
       ),
       body: FutureBuilder<List<VeterinaryAppointment>>(
@@ -92,6 +139,9 @@ class AppointmentsScreenState extends State<AppointmentsScreen> {
   }
 
   Widget _buildAppointmentCard(VeterinaryAppointment appointment) {
+    final canCancel = appointment.status == 'scheduled' && 
+                     appointment.dateTime.isAfter(DateTime.now());
+    
     return Card(
       elevation: 2,
       margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
@@ -106,12 +156,41 @@ class AppointmentsScreenState extends State<AppointmentsScreen> {
           'RDV pour ${appointment.petName}',
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
-        subtitle: Text('Avec Dr. ${appointment.veterinaryName}\nLe ${appointment.dateTime.day}/${appointment.dateTime.month}/${appointment.dateTime.year} à ${TimeOfDay.fromDateTime(appointment.dateTime).format(context)}'),
-        trailing: IconButton(
-          icon: const Icon(Icons.add_alert_outlined, color: Colors.teal),
-          tooltip: 'Ajouter au calendrier',
-          // C'est ici que l'on déclenche l'appel à l'API
-          onPressed: () => _addAppointmentToCalendar(appointment),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Avec Dr. ${appointment.veterinaryName}'),
+            Text('Le ${appointment.dateTime.day}/${appointment.dateTime.month}/${appointment.dateTime.year} à ${TimeOfDay.fromDateTime(appointment.dateTime).format(context)}'),
+            if (appointment.status == 'cancelled')
+              const Padding(
+                padding: EdgeInsets.only(top: 4),
+                child: Text(
+                  'Annulé',
+                  style: TextStyle(
+                    color: Colors.red,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+          ],
+        ),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (canCancel)
+              IconButton(
+                icon: const Icon(Icons.cancel, color: Colors.red),
+                tooltip: 'Annuler le rendez-vous',
+                onPressed: () => _cancelAppointment(appointment),
+              ),
+            if (appointment.status == 'scheduled')
+              IconButton(
+                icon: const Icon(Icons.add_alert_outlined, color: Colors.teal),
+                tooltip: 'Ajouter au calendrier',
+                onPressed: () => _addAppointmentToCalendar(appointment),
+              ),
+          ],
         ),
       ),
     );

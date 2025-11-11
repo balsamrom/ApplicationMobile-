@@ -94,7 +94,7 @@ class _FirstAidScreenState extends State<FirstAidScreen> {
           'Trousse de premiers secours',
           style: TextStyle(fontWeight: FontWeight.w600),
         ),
-        backgroundColor: const Color(0xFF009688),
+        backgroundColor: const Color(0xFF6366F1),
         foregroundColor: Colors.white,
         elevation: 0,
         actions: [

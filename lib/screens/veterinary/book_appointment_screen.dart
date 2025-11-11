@@ -117,7 +117,7 @@ class BookAppointmentScreenState extends State<BookAppointmentScreen> {
         title: Text(widget.appointment == null
             ? 'Prendre Rendez-vous'
             : 'Modifier le RDV'),
-        backgroundColor: primaryPurple,
+        backgroundColor: const Color(0xFF6366F1),
         elevation: 0,
       ),
       body: SingleChildScrollView(
@@ -416,7 +416,7 @@ class BookAppointmentScreenState extends State<BookAppointmentScreen> {
     return ElevatedButton(
       onPressed: _submit,
       style: ElevatedButton.styleFrom(
-        backgroundColor: primaryPurple,
+        backgroundColor: const Color(0xFF6366F1),
         padding: const EdgeInsets.symmetric(vertical: 16),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),

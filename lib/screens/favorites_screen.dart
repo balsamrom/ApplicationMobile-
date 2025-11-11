@@ -126,7 +126,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
             icon: const Icon(Icons.shopping_bag),
             label: const Text('Découvrir les produits'),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.teal,
+              backgroundColor: const Color(0xFF6366F1),
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
             ),

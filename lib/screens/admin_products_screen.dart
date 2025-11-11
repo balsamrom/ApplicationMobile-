@@ -538,7 +538,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                     icon: const Icon(Icons.photo_library),
                     label: const Text('Galerie'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.teal,
+                      backgroundColor: const Color(0xFF6366F1),
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       shape: RoundedRectangleBorder(

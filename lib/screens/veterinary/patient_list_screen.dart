@@ -88,7 +88,7 @@ class _PatientListScreenState extends State<PatientListScreen> {
       backgroundColor: Colors.deepPurple.shade50,
       appBar: AppBar(
         title: const Text('Mes Patients'),
-        backgroundColor: primaryPurple,
+        backgroundColor: const Color(0xFF6366F1),
       ),
       body: FutureBuilder<List<_PatientInfo>>(
         future: _patientsInfoFuture,
